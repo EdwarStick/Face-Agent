@@ -6,8 +6,10 @@ Matches existing database schema:
 - Non-nullable second name and second surname fields with empty string defaults
 """
 from datetime import datetime
+# pyrefly: ignore [missing-import]
 from sqlalchemy import Boolean, String, DateTime, func
-from sqlalchemy.orm import Mapped, mapped_column
+# pyrefly: ignore [missing-import]
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 from app.models.mixins import UUIDMixin
@@ -41,3 +43,6 @@ class Empleado(Base, UUIDMixin):
         onupdate=func.now(),
         nullable=True,
     )
+
+    rostros = relationship("Rostro", back_populates="empleado")
+

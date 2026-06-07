@@ -25,23 +25,17 @@ def crear_empleado(db: Session, data: EmpleadoCreate) -> Empleado:
 
 
 def listar_empleados(db: Session) -> list[Empleado]:
-    """
-    Returns all active employees from the database.
-    """
     return db.query(Empleado).filter(Empleado.activo == True).all()
 
 
-def obtener_empleado(db: Session, empleado_id: uuid.UUID) -> Empleado | None:
-    """
-    Retrieves a single employee by their UUID.
-    """
-    return db.query(Empleado).filter(Empleado.id == empleado_id).first()
-
+def obtener_empleado(db: Session, empleado_id: int) -> Empleado | None:
+    return db.query(Empleado).filter(
+        Empleado.id == empleado_id,
+        Empleado.activo == True
+    ).first()
 
 def actualizar_empleado(db: Session, empleado_id: uuid.UUID, data: EmpleadoUpdate) -> Empleado | None:
-    """
-    Updates an existing employee's details.
-    """
+
     empleado = obtener_empleado(db, empleado_id)
     if not empleado:
         return None
@@ -61,9 +55,6 @@ def actualizar_empleado(db: Session, empleado_id: uuid.UUID, data: EmpleadoUpdat
 
 
 def eliminar_empleado(db: Session, empleado_id: uuid.UUID) -> Empleado | None:
-    """
-    Soft deletes an employee by setting active to False.
-    """
     empleado = obtener_empleado(db, empleado_id)
     if not empleado:
         return None
