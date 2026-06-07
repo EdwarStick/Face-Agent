@@ -8,3 +8,5 @@ Example (uncomment when each model is created):
     from app.models.attendance import Attendance
     from app.models.face_embedding import FaceEmbedding
 """
+
+from app.models.empleado import Empleado
