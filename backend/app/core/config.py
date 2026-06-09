@@ -37,10 +37,13 @@ class Settings(BaseSettings):
     @property
     def database_url(self) -> str:
         """Assembles the PostgreSQL connection URL from individual components."""
-        return (
+        url = (
             f"postgresql+psycopg2://{self.postgres_user}:{self.postgres_password}"
             f"@{self.postgres_server}:{self.postgres_port}/{self.postgres_db}"
         )
+        if self.postgres_server not in ("localhost", "127.0.0.1"):
+            url += "?sslmode=require"
+        return url
 
     @property
     def async_database_url(self) -> str:
@@ -51,7 +54,7 @@ class Settings(BaseSettings):
         )
 
     # ── CORS ──────────────────────────────────────────────────────────────────
-    cors_origins: str = "http://localhost:3000,http://localhost:5173"
+    cors_origins: str = "http://localhost:3000,http://localhost:5173,http://localhost:5174"
 
     @field_validator("cors_origins", mode="before")
     @classmethod

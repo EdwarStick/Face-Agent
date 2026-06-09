@@ -1,6 +1,8 @@
 import uuid
 # pyrefly: ignore [missing-import]
 from sqlalchemy.orm import Session
+# pyrefly: ignore [missing-import]
+from sqlalchemy import func as sqlfunc
 from app.models.rostro import Rostro
 from app.models.empleado import Empleado
 from app.services.face_service import generar_embedding
@@ -29,3 +31,7 @@ def registrar_rostro(db: Session, data: RegistroRostroRequest) -> Rostro:
 
 def listar_rostros_empleado(db: Session, empleado_id: uuid.UUID) -> list[Rostro]:
     return db.query(Rostro).filter(Rostro.empleado_id == empleado_id).all()
+
+
+def contar_rostros(db: Session) -> int:
+    return db.query(sqlfunc.count(Rostro.id)).scalar() or 0
