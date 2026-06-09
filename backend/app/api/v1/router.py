@@ -11,6 +11,8 @@ from fastapi import APIRouter
 # pyrefly: ignore [missing-import]
 from app.api.v1.endpoints import health
 from app.empleados.router import router as empleados_router
+from app.rostros.router import router as rostros_router
+from app.reconocimiento.router import router as reconocimiento_router
 
 api_router = APIRouter()
 
@@ -20,6 +22,16 @@ api_router.include_router(
     empleados_router,
     prefix="/empleados",
     tags=["Empleados"]
+)
+api_router.include_router(
+    rostros_router,
+    prefix="/rostros",
+    tags=["Registro Biométrico"]
+)
+api_router.include_router(
+    reconocimiento_router,
+    prefix="/reconocimiento",
+    tags=["Reconocimiento Facial"]
 )
 
 # Future feature routers — uncomment as features are implemented:

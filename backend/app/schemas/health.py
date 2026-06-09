@@ -3,7 +3,7 @@ FaceAttendance AI — Health Response Schema
 ==========================================
 Pydantic schema for the /health endpoint response.
 """
-
+# pyrefly: ignore [missing-import]
 from pydantic import BaseModel
 
 

@@ -27,5 +27,5 @@ def registrar_rostro(db: Session, data: RegistroRostroRequest) -> Rostro:
     return rostro
 
 
-def listar_empleados(db: Session) -> list[Empleado]:
-    return db.query(Empleado).filter(Empleado.activo == True).all()
+def listar_rostros_empleado(db: Session, empleado_id: uuid.UUID) -> list[Rostro]:
+    return db.query(Rostro).filter(Rostro.empleado_id == empleado_id).all()

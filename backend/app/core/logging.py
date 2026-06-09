@@ -6,8 +6,9 @@ Call `setup_logging()` once during application startup.
 """
 
 import sys
-from app.core.config import settings
-from loguru import logger
+from app.core.config import settings    
+# pyrefly: ignore [missing-import]
+from loguru import logger         
 
 
 def setup_logging() -> None:

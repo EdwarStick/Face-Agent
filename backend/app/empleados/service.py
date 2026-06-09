@@ -28,7 +28,7 @@ def listar_empleados(db: Session) -> list[Empleado]:
     return db.query(Empleado).filter(Empleado.activo == True).all()
 
 
-def obtener_empleado(db: Session, empleado_id: int) -> Empleado | None:
+def obtener_empleado(db: Session, empleado_id: uuid.UUID) -> Empleado | None:
     return db.query(Empleado).filter(
         Empleado.id == empleado_id,
         Empleado.activo == True

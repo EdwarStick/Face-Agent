@@ -6,10 +6,12 @@ A single Settings instance is created once and shared across the application
 via the `get_settings()` dependency.
 """
 
+# pyrefly: ignore [missing-import]
 from functools import lru_cache
 from typing import List
-
+# pyrefly: ignore [missing-import]
 from pydantic import field_validator
+# pyrefly: ignore [missing-import]
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
