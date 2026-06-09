@@ -3,6 +3,7 @@ import MainLayout from '../layouts/MainLayout';
 import DashboardPage from '../pages/DashboardPage';
 import EmployeeListPage from '../features/empleados/pages/EmployeeListPage';
 import EmployeeDetailPage from '../features/empleados/pages/EmployeeDetailPage';
+import { RecognitionPage } from '../features/facial-recognition/pages/RecognitionPage';
 
 export const router = createBrowserRouter([
   {
@@ -20,6 +21,10 @@ export const router = createBrowserRouter([
       {
         path: 'empleados/:id',
         element: <EmployeeDetailPage />,
+      },
+      {
+        path: 'reconocimiento',
+        element: <RecognitionPage />,
       },
     ],
   },
