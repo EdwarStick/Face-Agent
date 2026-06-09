@@ -7,6 +7,7 @@ import BadgeIcon from '@mui/icons-material/Badge';
 import DomainIcon from '@mui/icons-material/Domain';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import type { EmpleadoResponse } from '../types';
+import { FaceCaptureButton } from '../../facial';
 
 interface EmployeeDetailCardProps {
   employee: EmpleadoResponse;
@@ -48,12 +49,16 @@ export const EmployeeDetailCard: React.FC<EmployeeDetailCardProps> = ({ employee
           <Typography variant="subtitle1" sx={{ opacity: 0.8 }}>
             {employee.cargo || 'Sin Cargo'}
           </Typography>
-          <Box sx={{ mt: 1 }}>
+          <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
             <Chip
               label={employee.activo ? 'Activo' : 'Inactivo'}
               color={employee.activo ? 'success' : 'default'}
               size="small"
               sx={{ fontWeight: 'bold', bgcolor: employee.activo ? 'success.main' : 'rgba(255,255,255,0.2)', color: 'white' }}
+            />
+            <FaceCaptureButton
+              employeeId={employee.id}
+              employeeName={formatFullName()}
             />
           </Box>
         </Box>
