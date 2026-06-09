@@ -1,4 +1,5 @@
 import uuid
+import uuid
 # pyrefly: ignore [missing-import]
 from pydantic import BaseModel
 from datetime import datetime
@@ -11,9 +12,9 @@ class RegistroRostroRequest(BaseModel):
 
 
 class RostroResponse(BaseModel):
-    id: int
+    id: uuid.UUID
     empleado_id: uuid.UUID
     ruta_imagen: Optional[str]
-    created_at: datetime
+    fecha_registro: Optional[datetime]
 
     model_config = {"from_attributes": True}

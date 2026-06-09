@@ -10,10 +10,12 @@ Bootstraps the FastAPI application with:
 
 from contextlib import asynccontextmanager
 
+# pyrefly: ignore [missing-import]
 from fastapi import FastAPI
+# pyrefly: ignore [missing-import]
 from fastapi.middleware.cors import CORSMiddleware
+# pyrefly: ignore [missing-import]
 from loguru import logger
-
 from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.logging import setup_logging

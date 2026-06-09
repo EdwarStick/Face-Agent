@@ -12,9 +12,11 @@ Usage:
 
 import uuid
 from datetime import datetime
-
+# pyrefly: ignore [missing-import]
 from sqlalchemy import DateTime, func
-from sqlalchemy.dialects.postgresql import UUID
+# pyrefly: ignore [missing-import]
+from sqlalchemy.dialects.postgresql import UUID     
+# pyrefly: ignore [missing-import]
 from sqlalchemy.orm import Mapped, mapped_column
 
 
