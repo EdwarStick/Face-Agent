@@ -19,7 +19,7 @@ from loguru import logger
 from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.logging import setup_logging
-from app.db.base import check_db_connection
+from app.db.base import Base, check_db_connection, engine
 
 
 # ── Lifespan (replaces deprecated on_event) ───────────────────────────────────
@@ -36,6 +36,9 @@ async def lifespan(app: FastAPI):
             "Database is unreachable at startup. "
             "The API will start, but DB-dependent endpoints will fail."
         )
+    else:
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database tables synchronized.")
 
     yield  # Application runs here
 
