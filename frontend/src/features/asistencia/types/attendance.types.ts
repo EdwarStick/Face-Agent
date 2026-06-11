@@ -29,6 +29,16 @@ export interface AttendancePagination {
   total: number;
 }
 
+export interface AttendanceStatsResponse {
+  total: number;
+  hoy: number;
+  total_empleados: number;
+  presentes: number;
+  completados: number;
+  ausentes: number;
+  pendientes: number;
+}
+
 export interface AttendanceListResponse {
   data: AttendanceRecord[];
   pagination: AttendancePagination;

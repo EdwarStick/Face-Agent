@@ -39,3 +39,8 @@ class AsistenciaListResponse(BaseModel):
 class AsistenciaStats(BaseModel):
     total: int
     hoy: int
+    total_empleados: int
+    presentes: int
+    completados: int
+    ausentes: int
+    pendientes: int

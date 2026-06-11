@@ -3,9 +3,15 @@ import type {
   AsistenciaFullApiItem,
   AsistenciaListApiItem,
   EmpleadoApiItem,
+  AttendanceStatsResponse,
 } from '../types/attendance.types';
 
 export const attendanceService = {
+  getStats: async (): Promise<AttendanceStatsResponse> => {
+    const { data } = await api.get<AttendanceStatsResponse>('/asistencias/stats');
+    return data;
+  },
+
   getAllEmployees: async (): Promise<EmpleadoApiItem[]> => {
     const { data } = await api.get<EmpleadoApiItem[]>('/empleados/');
     return data;

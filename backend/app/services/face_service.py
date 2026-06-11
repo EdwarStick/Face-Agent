@@ -6,7 +6,9 @@ import cv2
 # pyrefly: ignore [missing-import]
 from deepface import DeepFace
 # pyrefly: ignore [missing-import]
-from loguru import logger   
+from loguru import logger
+
+from app.core.config import settings
 
 
 def imagen_base64_a_array(imagen_base64: str) -> np.ndarray:
@@ -30,9 +32,9 @@ def generar_embedding(imagen_base64: str) -> list[float]:
 
     resultado = DeepFace.represent(
         img_path=img,
-        model_name="Facenet512",
+        model_name=settings.face_recognition_model,
         enforce_detection=True,
-        detector_backend="opencv",
+        detector_backend=settings.face_detection_model,
     )
 
     if not resultado:

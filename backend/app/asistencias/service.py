@@ -91,10 +91,42 @@ def listar_ultimas(db: Session, limite: int = 10) -> list[dict]:
 
 def obtener_stats(db: Session) -> dict:
     total = db.query(sqlfunc.count(Asistencia.id)).scalar() or 0
+
+    hoy_date = date.today()
     hoy = (
         db.query(sqlfunc.count(Asistencia.id))
-        .filter(sqlfunc.date(Asistencia.fecha_registro) == date.today())
+        .filter(sqlfunc.date(Asistencia.fecha_registro) == hoy_date)
         .scalar()
         or 0
     )
-    return {"total": total, "hoy": hoy}
+
+    total_empleados = db.query(sqlfunc.count(Empleado.id)).filter(Empleado.activo == True).scalar() or 0
+    presentes = (
+        db.query(sqlfunc.count(Asistencia.id))
+        .filter(
+            sqlfunc.date(Asistencia.fecha_registro) == hoy_date,
+            Asistencia.hora_salida == None,
+        )
+        .scalar()
+        or 0
+    )
+    completados = (
+        db.query(sqlfunc.count(Asistencia.id))
+        .filter(
+            sqlfunc.date(Asistencia.fecha_registro) == hoy_date,
+                Asistencia.hora_salida != None,
+        )
+        .scalar()
+        or 0
+    )
+    ausentes = total_empleados - (presentes + completados)
+
+    return {
+        "total": total,
+        "hoy": hoy,
+        "total_empleados": total_empleados,
+        "presentes": presentes,
+        "completados": completados,
+        "ausentes": ausentes,
+        "pendientes": presentes,
+    }
