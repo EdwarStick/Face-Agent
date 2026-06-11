@@ -5,7 +5,25 @@ export interface RecognitionResponse {
   confidence: number;
 }
 
-export type RecognitionStatusType = 'idle' | 'loading' | 'success' | 'no_match' | 'error';
+export interface AttendanceRecognitionResponse {
+  reconocido: boolean;
+  empleado_id: string | null;
+  nombre_completo: string | null;
+  cargo: string | null;
+  area: string | null;
+  confianza: number | null;
+  tipo_marcacion: string | null;
+  fecha_hora: string | null;
+  mensaje: string;
+}
+
+export type RecognitionStatusType =
+  | 'idle'
+  | 'loading'
+  | 'registering'
+  | 'success'
+  | 'no_match'
+  | 'error';
 
 export type CameraPermission = 'idle' | 'granted' | 'denied' | 'unavailable';
 
@@ -35,6 +53,7 @@ export interface RecognitionCameraProps {
 export interface RecognitionResultCardProps {
   status: RecognitionStatusType;
   result: RecognitionResponse | null;
+  attendanceResult: AttendanceRecognitionResponse | null;
   error: string | null;
 }
 

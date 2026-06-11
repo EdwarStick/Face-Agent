@@ -21,6 +21,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import FaceRetouchingNaturalIcon from '@mui/icons-material/FaceRetouchingNatural';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import ScheduleIcon from '@mui/icons-material/Schedule';
 
 const drawerWidth = 240;
 
@@ -40,6 +41,7 @@ export const MainLayout: React.FC = () => {
     { text: 'Empleados', icon: <PeopleIcon />, path: '/empleados' },
     { text: 'Reconocimiento', icon: <FaceRetouchingNaturalIcon />, path: '/reconocimiento' },
     { text: 'Asistencias', icon: <CalendarMonthIcon />, path: '/asistencias' },
+    { text: 'Horarios', icon: <ScheduleIcon />, path: '/horarios' },
   ];
 
   const drawerContent = (

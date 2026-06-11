@@ -10,15 +10,16 @@ from app.asistencias.schemas import RegistrarEntradaRequest, RegistrarSalidaRequ
 
 
 def registrar_entrada(db: Session, data: RegistrarEntradaRequest) -> Asistencia:
-    # Verificar si ya tiene entrada hoy sin salida
     hoy = datetime.now(timezone.utc).date()
-    entrada_existente = db.query(Asistencia).filter(
+
+    entrada_hoy = db.query(Asistencia).filter(
         Asistencia.empleado_id == data.empleado_id,
-        Asistencia.hora_salida == None
+        Asistencia.hora_entrada >= datetime(hoy.year, hoy.month, hoy.day, tzinfo=timezone.utc),
+        Asistencia.hora_entrada < datetime(hoy.year, hoy.month, hoy.day + 1, tzinfo=timezone.utc),
     ).first()
 
-    if entrada_existente:
-        return entrada_existente  # Ya tiene entrada activa
+    if entrada_hoy:
+        raise ValueError("El empleado ya registró una entrada hoy")
 
     asistencia = Asistencia(
         empleado_id=data.empleado_id,
@@ -32,27 +33,31 @@ def registrar_entrada(db: Session, data: RegistrarEntradaRequest) -> Asistencia:
     return asistencia
 
 
-def registrar_salida(db: Session, data: RegistrarSalidaRequest) -> Asistencia | None:
-    # Buscar la entrada activa (sin salida)
-    asistencia = db.query(Asistencia).filter(
+def registrar_salida(db: Session, data: RegistrarSalidaRequest) -> Asistencia:
+    hoy = datetime.now(timezone.utc).date()
+
+    entrada_hoy = db.query(Asistencia).filter(
         Asistencia.empleado_id == data.empleado_id,
-        Asistencia.hora_salida == None
+        Asistencia.hora_entrada >= datetime(hoy.year, hoy.month, hoy.day, tzinfo=timezone.utc),
+        Asistencia.hora_entrada < datetime(hoy.year, hoy.month, hoy.day + 1, tzinfo=timezone.utc),
     ).first()
 
-    if not asistencia:
-        return None
+    if not entrada_hoy:
+        raise ValueError("El empleado no tiene una entrada registrada hoy")
+
+    if entrada_hoy.hora_salida is not None:
+        raise ValueError("El empleado ya registró una salida hoy")
 
     ahora = datetime.now(timezone.utc)
-    asistencia.hora_salida = ahora
+    entrada_hoy.hora_salida = ahora
 
-    # Calcular horas trabajadas
-    delta = ahora - asistencia.hora_entrada
-    asistencia.horas_trabajadas = round(delta.total_seconds() / 3600, 2)
-    asistencia.estado = "completado"
+    delta = ahora - entrada_hoy.hora_entrada
+    entrada_hoy.horas_trabajadas = round(delta.total_seconds() / 3600, 2)
+    entrada_hoy.estado = "completado"
 
     db.commit()
-    db.refresh(asistencia)
-    return asistencia
+    db.refresh(entrada_hoy)
+    return entrada_hoy
 
 
 def listar_asistencias_empleado(db: Session, empleado_id: uuid.UUID) -> list[Asistencia]:

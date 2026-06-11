@@ -12,4 +12,5 @@ Example (uncomment when each model is created):
 from app.models.empleado import Empleado
 from app.models.rostro import Rostro
 from app.models.asistencia import Asistencia
+from app.models.horario import Horario
 

@@ -1,5 +1,8 @@
 import api from '../../../api/axios';
-import type { RecognitionResponse } from '../types/recognition.types';
+import type {
+  AttendanceRecognitionResponse,
+  RecognitionResponse,
+} from '../types/recognition.types';
 
 const blobToBase64 = (blob: Blob): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -8,7 +11,6 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
     reader.onloadend = () => {
       const result = reader.result as string;
 
-      // Elimina "data:image/jpeg;base64,"
       const base64 = result.split(',')[1];
 
       resolve(base64);
@@ -37,5 +39,20 @@ export const recognitionService = {
       position: (data.cargo as string | null) ?? null,
       confidence: (data.confianza as number) ?? 0,
     };
+  },
+
+  identifyAndRegisterAttendance: async (
+    imageBlob: Blob,
+  ): Promise<AttendanceRecognitionResponse> => {
+    const imagen_base64 = await blobToBase64(imageBlob);
+
+    const { data } = await api.post<AttendanceRecognitionResponse>(
+      '/reconocimiento/marcar',
+      {
+        imagen_base64,
+      },
+    );
+
+    return data;
   },
 };

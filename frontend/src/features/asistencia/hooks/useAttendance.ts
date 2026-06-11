@@ -57,8 +57,8 @@ function buildInfoFromList(
 
 function computeStatus(info: AttendanceInfo | null): AttendanceStatus {
   if (!info) return 'ausente';
-  if (info.hasExit) return 'presente';
-  return 'pendiente_salida';
+  if (info.hasExit) return 'completado';
+  return 'presente';
 }
 
 function buildRecord(
@@ -184,6 +184,7 @@ export function useAttendance(filters: AttendanceFiltersState) {
     let pendientes = 0;
     for (const r of filtered) {
       if (r.estado === 'presente') presentes++;
+      else if (r.estado === 'completado') presentes++;
       else if (r.estado === 'ausente') ausentes++;
       else pendientes++;
     }
@@ -237,7 +238,8 @@ function buildDetail(
     estado:
       full.estado === 'presente' ||
       full.estado === 'ausente' ||
-      full.estado === 'pendiente_salida'
+      full.estado === 'pendiente_salida' ||
+      full.estado === 'completado'
         ? full.estado
         : record.estado,
   };

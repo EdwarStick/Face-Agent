@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.db.base import get_db
-from app.reconocimiento.schemas import ReconocimientoRequest, ReconocimientoResponse
+from app.reconocimiento.schemas import ReconocimientoRequest, ReconocimientoResponse, ReconocimientoAsistenciaResponse
 from app.reconocimiento import service
 
 router = APIRouter()
@@ -14,6 +14,15 @@ router = APIRouter()
 def identificar(data: ReconocimientoRequest, db: Session = Depends(get_db)):
     try:
         resultado = service.identificar(db, data.imagen_base64)
+        return resultado
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/marcar", response_model=ReconocimientoAsistenciaResponse)
+def marcar(data: ReconocimientoRequest, db: Session = Depends(get_db)):
+    try:
+        resultado = service.marcar_con_reconocimiento(db, data.imagen_base64)
         return resultado
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

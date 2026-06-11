@@ -15,6 +15,7 @@ from app.rostros.router import router as rostros_router
 from app.reconocimiento.router import router as reconocimiento_router
 from app.asistencias.router import router as asistencias_router
 from app.chat.router import router as chat_router
+from app.horarios.router import router as horarios_router
 
 api_router = APIRouter()
 
@@ -44,6 +45,11 @@ api_router.include_router(
     chat_router,
     prefix="/chat",
     tags=["Chat IA"]
+)
+api_router.include_router(
+    horarios_router,
+    prefix="/horarios",
+    tags=["Horarios"]
 )
 
 # Future feature routers — uncomment as features are implemented:
