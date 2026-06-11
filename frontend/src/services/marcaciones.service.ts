@@ -16,12 +16,12 @@ export interface MarcacionStats {
 
 export const marcacionesService = {
   getStats: async (): Promise<MarcacionStats> => {
-    const { data } = await api.get<MarcacionStats>('/marcaciones/stats');
+    const { data } = await api.get<MarcacionStats>('/asistencias/stats');
     return data;
   },
 
   getUltimas: async (): Promise<MarcacionResponse[]> => {
-    const { data } = await api.get<MarcacionResponse[]>('/marcaciones/');
+    const { data } = await api.get<MarcacionResponse[]>('/asistencias/');
     return data;
   },
 };

@@ -1,6 +1,6 @@
 import uuid
 # pyrefly: ignore [missing-import]
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 # pyrefly: ignore [missing-import]
 from sqlalchemy.orm import Session
 
@@ -9,7 +9,9 @@ from app.asistencias import service
 from app.asistencias.schemas import (
     RegistrarEntradaRequest,
     RegistrarSalidaRequest,
-    AsistenciaResponse
+    AsistenciaResponse,
+    AsistenciaListResponse,
+    AsistenciaStats,
 )
 
 router = APIRouter()
@@ -36,3 +38,16 @@ def asistencias_hoy(db: Session = Depends(get_db)):
 @router.get("/empleado/{empleado_id}", response_model=list[AsistenciaResponse])
 def asistencias_empleado(empleado_id: uuid.UUID, db: Session = Depends(get_db)):
     return service.listar_asistencias_empleado(db, empleado_id)
+
+
+@router.get("/stats", response_model=AsistenciaStats)
+def obtener_stats(db: Session = Depends(get_db)):
+    return service.obtener_stats(db)
+
+
+@router.get("/", response_model=list[AsistenciaListResponse])
+def listar_ultimas(
+    limite: int = Query(10, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    return service.listar_ultimas(db, limite)

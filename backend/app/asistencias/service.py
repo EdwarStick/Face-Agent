@@ -1,8 +1,11 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 # pyrefly: ignore [missing-import]
 from sqlalchemy.orm import Session
+# pyrefly: ignore [missing-import]
+from sqlalchemy import func as sqlfunc
 from app.models.asistencia import Asistencia
+from app.models.empleado import Empleado
 from app.asistencias.schemas import RegistrarEntradaRequest, RegistrarSalidaRequest
 
 
@@ -59,8 +62,39 @@ def listar_asistencias_empleado(db: Session, empleado_id: uuid.UUID) -> list[Asi
 
 
 def listar_asistencias_hoy(db: Session) -> list[Asistencia]:
-    from datetime import date
     hoy = datetime.now(timezone.utc).date()
     return db.query(Asistencia).filter(
         Asistencia.hora_entrada >= datetime(hoy.year, hoy.month, hoy.day, tzinfo=timezone.utc)
     ).all()
+
+
+def listar_ultimas(db: Session, limite: int = 10) -> list[dict]:
+    rows = (
+        db.query(Asistencia, Empleado)
+        .join(Empleado, Asistencia.empleado_id == Empleado.id)
+        .order_by(Asistencia.fecha_registro.desc())
+        .limit(limite)
+        .all()
+    )
+    result = []
+    for a, e in rows:
+        result.append({
+            "id": a.id,
+            "empleado_id": a.empleado_id,
+            "empleado_nombre": f"{e.prim_nombre} {e.prim_apellido}",
+            "cargo": e.cargo,
+            "fecha_marcacion": a.hora_entrada or a.fecha_registro,
+            "tipo": "salida" if a.hora_salida else "entrada",
+        })
+    return result
+
+
+def obtener_stats(db: Session) -> dict:
+    total = db.query(sqlfunc.count(Asistencia.id)).scalar() or 0
+    hoy = (
+        db.query(sqlfunc.count(Asistencia.id))
+        .filter(sqlfunc.date(Asistencia.fecha_registro) == date.today())
+        .scalar()
+        or 0
+    )
+    return {"total": total, "hoy": hoy}

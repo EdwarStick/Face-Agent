@@ -25,3 +25,17 @@ class AsistenciaResponse(BaseModel):
     fecha_registro: datetime
 
     model_config = {"from_attributes": True}
+
+
+class AsistenciaListResponse(BaseModel):
+    id: uuid.UUID
+    empleado_id: uuid.UUID
+    empleado_nombre: Optional[str] = None
+    cargo: Optional[str] = None
+    fecha_marcacion: datetime
+    tipo: str
+
+
+class AsistenciaStats(BaseModel):
+    total: int
+    hoy: int
