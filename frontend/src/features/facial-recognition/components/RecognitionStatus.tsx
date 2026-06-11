@@ -21,6 +21,11 @@ const statusInfo: Record<RecognitionStatusType, {
     color: 'warning.main',
     icon: <CircularProgress size={20} />,
   },
+  registering: {
+    text: 'Registrando asistencia...',
+    color: 'info.main',
+    icon: <CircularProgress size={20} />,
+  },
   success: {
     text: 'Empleado identificado',
     color: 'success.main',

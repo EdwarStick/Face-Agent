@@ -19,15 +19,18 @@ router = APIRouter()
 
 @router.post("/entrada", response_model=AsistenciaResponse)
 def registrar_entrada(data: RegistrarEntradaRequest, db: Session = Depends(get_db)):
-    return service.registrar_entrada(db, data)
+    try:
+        return service.registrar_entrada(db, data)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.post("/salida", response_model=AsistenciaResponse)
 def registrar_salida(data: RegistrarSalidaRequest, db: Session = Depends(get_db)):
-    asistencia = service.registrar_salida(db, data)
-    if not asistencia:
-        raise HTTPException(status_code=404, detail="No hay entrada activa para este empleado")
-    return asistencia
+    try:
+        return service.registrar_salida(db, data)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/hoy", response_model=list[AsistenciaResponse])

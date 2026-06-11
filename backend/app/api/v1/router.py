@@ -14,6 +14,7 @@ from app.empleados.router import router as empleados_router
 from app.rostros.router import router as rostros_router
 from app.reconocimiento.router import router as reconocimiento_router
 from app.asistencias.router import router as asistencias_router
+from app.horarios.router import router as horarios_router
 
 api_router = APIRouter()
 
@@ -38,6 +39,11 @@ api_router.include_router(
     asistencias_router,
     prefix="/asistencias",
     tags=["Asistencias"]
+)
+api_router.include_router(
+    horarios_router,
+    prefix="/horarios",
+    tags=["Horarios"]
 )
 
 # Future feature routers — uncomment as features are implemented:

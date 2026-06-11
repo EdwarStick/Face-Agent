@@ -5,6 +5,7 @@ import EmployeeListPage from '../features/empleados/pages/EmployeeListPage';
 import EmployeeDetailPage from '../features/empleados/pages/EmployeeDetailPage';
 import { RecognitionPage } from '../features/facial-recognition/pages/RecognitionPage';
 import { AttendancePage } from '../features/asistencia/pages/AttendancePage';
+import { HorariosPage } from '../features/horarios/pages/HorariosPage';
 
 export const router = createBrowserRouter([
   {
@@ -30,6 +31,10 @@ export const router = createBrowserRouter([
       {
         path: 'asistencias',
         element: <AttendancePage />,
+      },
+      {
+        path: 'horarios',
+        element: <HorariosPage />,
       },
     ],
   },
