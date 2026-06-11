@@ -47,6 +47,11 @@ logs/
 .DS_Store
 Thumbs.db
 
+# ── Utility / Test artifacts ──────────────────────────────────────────────────
+convertir.py
+foto.jpg
+foto2.jpg
+
 # ── Face Recognition data (handled separately, not in source control) ─────────
 face_data/
 embeddings/

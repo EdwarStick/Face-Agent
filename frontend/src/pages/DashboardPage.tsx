@@ -8,16 +8,17 @@ import PeopleIcon from '@mui/icons-material/People';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ScheduleIcon from '@mui/icons-material/Schedule';
-import { empleadosService } from '../services/empleados.service';
-import { rostrosService } from '../services/rostros.service';
-import { marcacionesService } from '../services/marcaciones.service';
-import type { MarcacionResponse, MarcacionStats } from '../services/marcaciones.service';
+import { employeeService } from '../features/empleados/services/employeeService';
+import { facialService } from '../features/facial/services/facialService';
+import { attendanceService } from '../features/asistencia/services/attendanceService';
+import type { AsistenciaListApiItem } from '../features/asistencia/types/attendance.types';
 
 interface DashboardData {
   totalEmpleados: number;
   totalRostros: number;
-  marcacionesStats: MarcacionStats;
-  ultimasMarcaciones: MarcacionResponse[];
+  totalMarcaciones: number;
+  marcacionesHoy: number;
+  ultimasMarcaciones: AsistenciaListApiItem[];
 }
 
 export const DashboardPage: React.FC = () => {
@@ -30,16 +31,17 @@ export const DashboardPage: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        const [empleados, rostros, marcacionesStats, ultimasMarcaciones] = await Promise.all([
-          empleadosService.getAll(),
-          rostrosService.getCount(),
-          marcacionesService.getStats(),
-          marcacionesService.getUltimas(),
+        const [empleados, rostros, stats, ultimasMarcaciones] = await Promise.all([
+          employeeService.getEmployees(),
+          facialService.getCount(),
+          attendanceService.getStats(),
+          attendanceService.getRecentAttendance(10),
         ]);
         setData({
           totalEmpleados: empleados.length,
           totalRostros: rostros.total,
-          marcacionesStats,
+          totalMarcaciones: stats.total,
+          marcacionesHoy: stats.hoy,
           ultimasMarcaciones,
         });
       } catch (err) {
@@ -125,7 +127,7 @@ export const DashboardPage: React.FC = () => {
                   Total Marcaciones
                 </Typography>
                 <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                  {loading ? <Skeleton width={40} /> : data!.marcacionesStats.total}
+                  {loading ? <Skeleton width={40} /> : data!.totalMarcaciones}
                 </Typography>
               </Box>
             </CardContent>
@@ -143,7 +145,7 @@ export const DashboardPage: React.FC = () => {
                   Marcaciones Hoy
                 </Typography>
                 <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                  {loading ? <Skeleton width={40} /> : data!.marcacionesStats.hoy}
+                  {loading ? <Skeleton width={40} /> : data!.marcacionesHoy}
                 </Typography>
               </Box>
             </CardContent>

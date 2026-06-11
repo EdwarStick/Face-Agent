@@ -45,5 +45,5 @@ class Empleado(Base, UUIDMixin):
     )
 
     rostros = relationship("Rostro", back_populates="empleado")
-    marcaciones = relationship("Marcacion", back_populates="empleado")
+    asistencias = relationship("Asistencia", back_populates="empleado")
 

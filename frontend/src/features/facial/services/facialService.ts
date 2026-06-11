@@ -48,4 +48,9 @@ export const facialService = {
 
     return response.data;
   },
+
+  getCount: async (): Promise<{ total: number }> => {
+    const { data } = await api.get<{ total: number }>('/rostros/count');
+    return data;
+  },
 };
