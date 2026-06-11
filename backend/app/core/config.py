@@ -66,6 +66,10 @@ class Settings(BaseSettings):
     def cors_origins_list(self) -> List[str]:
         return [origin.strip() for origin in self.cors_origins.split(",")]
 
+    # ── Groq AI ───────────────────────────────────────────────────────────────
+    groq_api_key: str = ""
+    groq_model: str = "llama-3.1-8b-instant"
+
     # ── Azure AI ──────────────────────────────────────────────────────────────
     azure_subscription_key: str = ""
     azure_endpoint: str = ""

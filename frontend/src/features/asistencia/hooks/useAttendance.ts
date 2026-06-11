@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { attendanceService } from '../services/attendanceService';
+import { parseError } from '../../../utils/errorParser';
 import type {
   AttendanceRecord,
   AttendanceDetail,
@@ -143,16 +144,7 @@ export function useAttendance(filters: AttendanceFiltersState) {
 
       setAttendanceMap(infoMap);
     } catch (err: unknown) {
-      const message =
-        err && typeof err === 'object' && 'response' in err
-          ? String(
-              (
-                err as {
-                  response: { data?: { detail?: string } };
-                }
-              ).response?.data?.detail ?? err,
-            )
-          : 'Error al cargar los datos de asistencia.';
+      const message = parseError(err, 'Error al cargar los datos de asistencia.');
       setError(message);
       setEmployees([]);
       setAttendanceMap(new Map());
@@ -286,16 +278,7 @@ export function useAttendanceDetail(record: AttendanceRecord | null) {
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        const message =
-          err && typeof err === 'object' && 'response' in err
-            ? String(
-                (
-                  err as {
-                    response: { data?: { detail?: string } };
-                  }
-                ).response?.data?.detail ?? err,
-              )
-            : 'Error al cargar el detalle de la asistencia.';
+        const message = parseError(err, 'Error al cargar el detalle de la asistencia.');
         setError(message);
         setDetail(record);
       })

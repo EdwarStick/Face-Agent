@@ -36,11 +36,11 @@ def listar_empleados(db: Session) -> list[Empleado]:
     return db.query(Empleado).filter(Empleado.activo == True).all()
 
 
-def obtener_empleado(db: Session, empleado_id: uuid.UUID) -> Empleado | None:
-    return db.query(Empleado).filter(
-        Empleado.id == empleado_id,
-        Empleado.activo == True
-    ).first()
+def obtener_empleado(db: Session, empleado_id: uuid.UUID, incluir_inactivos: bool = False) -> Empleado | None:
+    query = db.query(Empleado).filter(Empleado.id == empleado_id)
+    if not incluir_inactivos:
+        query = query.filter(Empleado.activo == True)
+    return query.first()
 
 def actualizar_empleado(db: Session, empleado_id: uuid.UUID, data: EmpleadoUpdate) -> Empleado | None:
 

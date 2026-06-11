@@ -11,7 +11,6 @@ import {
   Stepper,
   Step,
   StepLabel,
-  Fade,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -44,8 +43,17 @@ export const FaceCaptureModal: React.FC<FaceCaptureModalProps> = ({
   onClose,
   onSuccess,
 }) => {
-  const { step, capturedImageUrl, error, setCapture, retake, upload, reset } =
-    useFaceCapture();
+  const {
+    step,
+    capturedImageUrl,
+    error,
+    totalTomas,
+    infoMessage,
+    setCapture,
+    retake,
+    upload,
+    reset,
+  } = useFaceCapture();
 
   const activeStep = stepIndexMap[step] ?? 0;
 
@@ -54,7 +62,7 @@ export const FaceCaptureModal: React.FC<FaceCaptureModalProps> = ({
     onClose();
   }, [reset, onClose]);
 
-  const handleSuccess = useCallback(() => {
+  const handleSidebarSuccess = useCallback(() => {
     onSuccess?.();
     handleClose();
   }, [onSuccess, handleClose]);
@@ -80,13 +88,13 @@ export const FaceCaptureModal: React.FC<FaceCaptureModalProps> = ({
       onClose={step === 'uploading' ? undefined : handleClose}
       maxWidth="sm"
       fullWidth
-      TransitionComponent={Fade}
-      transitionDuration={280}
-      PaperProps={{
-        sx: {
-          borderRadius: 4,
-          overflow: 'hidden',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
+      slotProps={{
+        paper: {
+          sx: {
+            borderRadius: 4,
+            overflow: 'hidden',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
+          },
         },
       }}
     >
@@ -109,7 +117,7 @@ export const FaceCaptureModal: React.FC<FaceCaptureModalProps> = ({
           </Typography>
           {employeeName && (
             <Typography variant="caption" sx={{ opacity: 0.75 }}>
-              {employeeName}
+              {employeeName} {totalTomas > 0 && `(Tomas: ${totalTomas} / 4)`}
             </Typography>
           )}
         </Box>
@@ -138,9 +146,69 @@ export const FaceCaptureModal: React.FC<FaceCaptureModalProps> = ({
           </Stepper>
         )}
 
+        {/* Indicadores de tomas faciales individuales */}
+        {step !== 'success' && step !== 'error' && (
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: 2,
+              mb: 3,
+            }}
+          >
+            {[1, 2, 3, 4].map((i) => {
+              const isSaved = i <= totalTomas;
+              const isCurrent =
+                i === totalTomas + 1 &&
+                (step === 'camera' || step === 'preview' || step === 'uploading');
+              return (
+                <Box
+                  key={i}
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.85rem',
+                    fontWeight: 700,
+                    border: '2px solid',
+                    borderColor: isSaved
+                      ? 'success.main'
+                      : isCurrent
+                      ? 'primary.main'
+                      : 'grey.300',
+                    bgcolor: isSaved
+                      ? 'success.main'
+                      : isCurrent
+                      ? 'rgba(37,99,235,0.08)'
+                      : 'transparent',
+                    color: isSaved
+                      ? 'white'
+                      : isCurrent
+                      ? 'primary.main'
+                      : 'text.disabled',
+                    boxShadow: isCurrent ? '0 0 0 3px rgba(37,99,235,0.15)' : 'none',
+                    transition: 'all 0.25s ease',
+                  }}
+                >
+                  {isSaved ? '✓' : i}
+                </Box>
+              );
+            })}
+          </Box>
+        )}
+
         {/* ── Paso: Cámara ── */}
         {step === 'camera' && (
-          <FaceCamera onCapture={handleCapture} onError={handleCameraError} />
+          <FaceCamera
+            onCapture={handleCapture}
+            onError={handleCameraError}
+            totalTomas={totalTomas}
+            infoMessage={infoMessage}
+          />
         )}
 
         {/* ── Paso: Vista previa / Enviando ── */}
@@ -188,9 +256,8 @@ export const FaceCaptureModal: React.FC<FaceCaptureModalProps> = ({
               ¡Rostro Registrado!
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 340 }}>
-              El rostro de{' '}
-              <strong>{employeeName ?? 'el empleado'}</strong> ha sido registrado
-              exitosamente en el sistema biométrico.
+              Se han registrado con éxito las {totalTomas} tomas faciales de{' '}
+              <strong>{employeeName ?? 'el empleado'}</strong> en el sistema biométrico.
             </Typography>
 
             <Button
@@ -198,7 +265,7 @@ export const FaceCaptureModal: React.FC<FaceCaptureModalProps> = ({
               variant="contained"
               color="success"
               size="large"
-              onClick={handleSuccess}
+              onClick={handleSidebarSuccess}
               sx={{ mt: 1, borderRadius: 2.5, px: 4, fontWeight: 700 }}
             >
               Entendido

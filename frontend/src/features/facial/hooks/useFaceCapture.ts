@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { facialService } from '../services/facialService';
 import type { FaceCaptureState, CaptureStep } from '../types/facial.types';
+import { parseError } from '../../../utils/errorParser';
 
 interface UseFaceCaptureReturn extends FaceCaptureState {
   setCapture: (blob: Blob, url: string) => void;
@@ -14,6 +15,8 @@ const INITIAL_STATE: FaceCaptureState = {
   capturedImageBlob: null,
   capturedImageUrl: null,
   error: null,
+  totalTomas: 0,
+  infoMessage: null,
 };
 
 /**
@@ -27,12 +30,13 @@ export const useFaceCapture = (): UseFaceCaptureReturn => {
    * Guarda el blob e URL capturados y avanza al paso de previsualización.
    */
   const setCapture = useCallback((blob: Blob, url: string) => {
-    setState({
+    setState((prev) => ({
+      ...prev,
       step: 'preview' as CaptureStep,
       capturedImageBlob: blob,
       capturedImageUrl: url,
       error: null,
-    });
+    }));
   }, []);
 
   /**
@@ -45,6 +49,7 @@ export const useFaceCapture = (): UseFaceCaptureReturn => {
         URL.revokeObjectURL(prev.capturedImageUrl);
       }
       return {
+        ...prev,
         step: 'camera' as CaptureStep,
         capturedImageBlob: null,
         capturedImageUrl: null,
@@ -68,22 +73,33 @@ export const useFaceCapture = (): UseFaceCaptureReturn => {
       // Lanzar la petición de forma asíncrona
       facialService
         .registerFace(employeeId, prev.capturedImageBlob)
-        .then(() => {
-          setState((s) => ({ ...s, step: 'success' as CaptureStep }));
+        .then((response) => {
+          if (prev.capturedImageUrl) {
+            URL.revokeObjectURL(prev.capturedImageUrl);
+          }
+          if (response.status === 'completed') {
+            setState((s) => ({
+              ...s,
+              step: 'success' as CaptureStep,
+              totalTomas: response.total,
+              infoMessage: response.message,
+              capturedImageBlob: null,
+              capturedImageUrl: null,
+            }));
+          } else {
+            // Ir al siguiente paso (cámara) para tomar otra foto
+            setState((s) => ({
+              ...s,
+              step: 'camera' as CaptureStep,
+              totalTomas: response.total,
+              infoMessage: response.message,
+              capturedImageBlob: null,
+              capturedImageUrl: null,
+            }));
+          }
         })
         .catch((err: unknown) => {
-          let errorMsg = 'Ocurrió un error al registrar el rostro.';
-          if (
-            err &&
-            typeof err === 'object' &&
-            'response' in err
-          ) {
-            const axiosErr = err as { response?: { data?: { detail?: string } }; message?: string };
-            errorMsg =
-              axiosErr.response?.data?.detail ||
-              axiosErr.message ||
-              errorMsg;
-          }
+          const errorMsg = parseError(err, 'Ocurrió un error al registrar el rostro.');
           setState((s) => ({
             ...s,
             step: 'error' as CaptureStep,

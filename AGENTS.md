@@ -35,7 +35,7 @@ alembic revision --autogenerate -m "msg" # new migration
 
 - **Spanish naming** for business domains: `empleados/`, `rostros/`, `reconocimiento/`
 - **Module-per-domain** layout: each domain has its own `router.py`, `schemas.py`, `service.py` under `app/<domain>/`
-- **`app/services/`** holds shared services (face_service, recognition_service)
+- **`app/services/`** holds shared services (face_service, recognition_service, groq_service)
 - **`app/models/`** holds SQLAlchemy models; alembic autogenerate relies on `app/models/__init__.py` importing all models
 - **`app/api/v1/router.py`** aggregates domain routers; new feature routers get registered there
 - DB column names are Spanish (`fecha_creacion`, `fecha_actualizacion`) but Python attributes are English
@@ -52,6 +52,8 @@ alembic revision --autogenerate -m "msg" # new migration
 | `/api/v1/empleados` | empleados/ | CRUD employees |
 | `/api/v1/rostros` | rostros/ | Register face (base64 image → embedding) |
 | `/api/v1/reconocimiento/identificar` | reconocimiento/ | Match face against DB embeddings |
+| `/api/v1/asistencias` | asistencias/ | Register entry/exit, list today's attendance |
+| `/api/v1/chat` | chat/ | AI chat about employees & attendance via Groq |
 
 ## Testing quirks
 
@@ -63,6 +65,8 @@ alembic revision --autogenerate -m "msg" # new migration
 
 ## Important gotchas
 
+- **Groq chat** uses `llama3-8b-8192` by default, configurable via `GROQ_MODEL` in `.env`
+- **`chat/` router** builds context from live DB (active employees, today's attendance) and sends it to Groq
 - **No migrations exist yet** — `alembic/versions/` only has `.gitkeep`; first `alembic revision --autogenerate` will create initial schema
 - DB must be reachable or health check returns `degraded`; app still starts
 - Face embedding uses DeepFace `represent()` with `detector_backend="opencv"`, `model_name="Facenet512"`

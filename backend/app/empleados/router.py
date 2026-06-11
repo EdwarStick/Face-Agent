@@ -23,7 +23,7 @@ def listar_empleados(db: Session = Depends(get_db)):
 
 @router.get("/{empleado_id}", response_model=EmpleadoResponse)
 def obtener_empleado(empleado_id: uuid.UUID, db: Session = Depends(get_db)):
-    emp = service.obtener_empleado(db, empleado_id)
+    emp = service.obtener_empleado(db, empleado_id, incluir_inactivos=True)
     if not emp:
         raise HTTPException(status_code=404, detail="Empleado no encontrado")
     return emp
