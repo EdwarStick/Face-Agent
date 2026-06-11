@@ -6,7 +6,7 @@ Add new endpoint routers here as each feature branch is merged.
 """
 
 # pyrefly: ignore [missing-import]
-from fastapi import APIRouter  
+from fastapi import APIRouter
 
 # pyrefly: ignore [missing-import]
 from app.api.v1.endpoints import health
@@ -14,7 +14,9 @@ from app.empleados.router import router as empleados_router
 from app.rostros.router import router as rostros_router
 from app.reconocimiento.router import router as reconocimiento_router
 from app.asistencias.router import router as asistencias_router
+# pyrefly: ignore [missing-import]
 from app.chat.router import router as chat_router
+# pyrefly: ignore [missing-import]
 from app.horarios.router import router as horarios_router
 
 api_router = APIRouter()
