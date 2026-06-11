@@ -13,9 +13,17 @@ def crear_empleado(db: Session, data: EmpleadoCreate) -> Empleado:
     """
     payload = data.model_dump()
     if payload.get("seg_nombres") is None:
-        payload["seg_nombres"] = ""
+        payload["seg_nombres"] = None
     if payload.get("seg_apellido") is None:
-        payload["seg_apellido"] = ""
+        payload["seg_apellido"] = None
+    if payload.get("correo") is None:
+        payload["correo"] = None
+    if payload.get("telefono") is None:
+        payload["telefono"] = None
+    if payload.get("cargo") is None:
+        payload["cargo"] = None
+    if payload.get("area") is None:
+        payload["area"] = None
         
     empleado = Empleado(**payload)
     db.add(empleado)
