@@ -1,4 +1,4 @@
-export type AttendanceStatus = 'presente' | 'ausente' | 'pendiente_salida';
+export type AttendanceStatus = 'presente' | 'ausente' | 'pendiente_salida' | 'completado';
 
 export interface AttendanceRecord {
   id: string;

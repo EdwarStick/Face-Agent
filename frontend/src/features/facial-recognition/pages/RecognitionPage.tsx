@@ -8,6 +8,17 @@ import { RecognitionCamera } from '../components/RecognitionCamera';
 import { RecognitionStatus } from '../components/RecognitionStatus';
 import { RecognitionResultCard } from '../components/RecognitionResultCard';
 
+const buttonLabel = (status: string): string => {
+  switch (status) {
+    case 'loading':
+      return 'Reconociendo...';
+    case 'registering':
+      return 'Registrando asistencia...';
+    default:
+      return 'Reconocer';
+  }
+};
+
 export const RecognitionPage: React.FC = () => {
   const {
     videoRef,
@@ -19,26 +30,32 @@ export const RecognitionPage: React.FC = () => {
     capturePhoto,
   } = useRecognitionCamera();
 
-  const { status, result, error: recError, identify } = useFaceRecognition();
+  const {
+    status,
+    result,
+    attendanceResult,
+    error: recError,
+    identifyAndRegister,
+  } = useFaceRecognition();
 
   useEffect(() => {
     startCamera();
   }, [startCamera]);
 
   const handleRecognize = useCallback(async () => {
-    if (status === 'loading' || !stream) return;
+    if (status === 'loading' || status === 'registering' || !stream) return;
 
     const blob = await capturePhoto();
     if (!blob) return;
 
-    await identify(blob);
-  }, [status, stream, capturePhoto, identify]);
+    await identifyAndRegister(blob);
+  }, [status, stream, capturePhoto, identifyAndRegister]);
 
   const handleRetry = useCallback(() => {
     startCamera();
   }, [startCamera]);
 
-  const isLoading = status === 'loading';
+  const isBusy = status === 'loading' || status === 'registering';
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
@@ -76,7 +93,7 @@ export const RecognitionPage: React.FC = () => {
           variant="contained"
           size="large"
           onClick={handleRecognize}
-          disabled={!stream || isLoading}
+          disabled={!stream || isBusy}
           startIcon={<FaceIcon />}
           sx={{
             px: 5,
@@ -96,12 +113,13 @@ export const RecognitionPage: React.FC = () => {
             },
           }}
         >
-          {isLoading ? 'Reconociendo...' : 'Reconocer'}
+          {buttonLabel(status)}
         </Button>
 
         <RecognitionResultCard
           status={status}
           result={result}
+          attendanceResult={attendanceResult}
           error={recError}
         />
       </Paper>

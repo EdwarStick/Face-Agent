@@ -9,6 +9,7 @@ const config: Record<AttendanceStatus, { label: string; color: 'success' | 'erro
   presente: { label: 'Presente', color: 'success' },
   ausente: { label: 'Ausente', color: 'error' },
   pendiente_salida: { label: 'Pendiente salida', color: 'warning' },
+  completado: { label: 'Jornada terminada', color: 'success' },
 };
 
 export function AttendanceStatusChip({ estado }: Props) {
