@@ -55,3 +55,6 @@ foto2.jpg
 # ── Face Recognition data (handled separately, not in source control) ─────────
 face_data/
 embeddings/
+
+# ── Uploaded images ───────────────────────────────────────────────────────────
+uploads/

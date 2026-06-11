@@ -8,6 +8,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ScheduleIcon from '@mui/icons-material/Schedule';
+import { parseError } from '../utils/errorParser';
 import { employeeService } from '../features/empleados/services/employeeService';
 import { facialService } from '../features/facial/services/facialService';
 import { attendanceService } from '../features/asistencia/services/attendanceService';
@@ -45,10 +46,7 @@ export const DashboardPage: React.FC = () => {
           ultimasMarcaciones,
         });
       } catch (err) {
-        const message =
-          err && typeof err === 'object' && 'response' in err
-            ? String((err as { response: { data?: { detail?: string } } }).response?.data?.detail ?? err)
-            : 'Error al cargar los datos del panel. Intenta nuevamente.';
+        const message = parseError(err, 'Error al cargar los datos del panel. Intenta nuevamente.');
         setError(message);
       } finally {
         setLoading(false);

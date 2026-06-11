@@ -17,7 +17,12 @@ import type { FaceCameraProps } from '../types/facial.types';
  * Componente que muestra el stream en tiempo real de la cámara
  * y permite capturar una fotografía.
  */
-export const FaceCamera: React.FC<FaceCameraProps> = ({ onCapture, onError }) => {
+export const FaceCamera: React.FC<FaceCameraProps> = ({
+  onCapture,
+  onError,
+  totalTomas = 0,
+  infoMessage,
+}) => {
   const { videoRef, stream, permission, error, isLoading, startCamera, capturePhoto } =
     useCamera();
 
@@ -44,6 +49,25 @@ export const FaceCamera: React.FC<FaceCameraProps> = ({ onCapture, onError }) =>
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+      {/* Mensaje de instrucción del backend */}
+      {infoMessage && (
+        <Alert
+          severity="info"
+          sx={{
+            width: '100%',
+            maxWidth: 480,
+            borderRadius: 2,
+            animation: 'slideDown 0.3s ease-out',
+            '@keyframes slideDown': {
+              from: { transform: 'translateY(-10px)', opacity: 0 },
+              to: { transform: 'translateY(0)', opacity: 1 },
+            },
+          }}
+        >
+          {infoMessage}
+        </Alert>
+      )}
+
       {/* Área de video */}
       <Box
         sx={{
@@ -147,6 +171,28 @@ export const FaceCamera: React.FC<FaceCameraProps> = ({ onCapture, onError }) =>
                 boxShadow: 'inset 0 0 0 1px rgba(37,99,235,0.3)',
               }}
             />
+          </Box>
+        )}
+
+        {/* Indicador de Tomas */}
+        {stream && totalTomas > 0 && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 10,
+              left: 10,
+              display: 'flex',
+              alignItems: 'center',
+              bgcolor: 'rgba(0,0,0,0.6)',
+              px: 1.2,
+              py: 0.5,
+              borderRadius: 1.5,
+              border: '1px solid rgba(255,255,255,0.15)',
+            }}
+          >
+            <Typography variant="caption" sx={{ color: 'white', fontSize: '0.75rem', fontWeight: 700 }}>
+              Tomas: {totalTomas} / 4
+            </Typography>
           </Box>
         )}
 

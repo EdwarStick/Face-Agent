@@ -8,7 +8,6 @@ from loguru import logger
 from app.models.rostro import Rostro
 from app.models.empleado import Empleado
 from app.services.face_service import generar_embedding
-from app.core.config import settings
 
 
 def cosine_similarity(a: list, b: list) -> float:
@@ -48,7 +47,10 @@ def identificar_empleado(db: Session, imagen_base64: str) -> dict:
 
     logger.info(f"Mejor similitud encontrada: {mejor_similitud:.4f}")
 
-    UMBRAL = settings.face_similarity_threshold
+    # Umbral 0.65 para ArcFace con similitud coseno.
+    # Facenet512 usaba 0.70; ArcFace requiere un umbral más bajo
+    # para evitar falsos negativos manteniendo precisión aceptable.
+    UMBRAL = 0.65
 
     if mejor_similitud >= UMBRAL:
         empleado = mejor_rostro.empleado

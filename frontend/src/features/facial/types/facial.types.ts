@@ -4,12 +4,11 @@ export type CaptureStep = 'camera' | 'preview' | 'uploading' | 'success' | 'erro
 // Estado de permisos de cámara
 export type CameraPermission = 'idle' | 'granted' | 'denied' | 'unavailable';
 
-// Respuesta del backend al registrar un rostro (RostroResponse de FastAPI)
+// Respuesta del backend al registrar un rostro (RegistroResponse de FastAPI)
 export interface FaceRegisterResponse {
-  id: string;
-  empleado_id: string;
-  ruta_imagen?: string | null;
-  fecha_registro?: string | null;
+  status: 'success' | 'completed';
+  message: string;
+  total: number;
 }
 
 // Estado interno del hook useCamera
@@ -26,6 +25,8 @@ export interface FaceCaptureState {
   capturedImageBlob: Blob | null;
   capturedImageUrl: string | null;
   error: string | null;
+  totalTomas: number;
+  infoMessage: string | null;
 }
 
 // Props del botón de captura facial
@@ -48,6 +49,8 @@ export interface FaceCaptureModalProps {
 export interface FaceCameraProps {
   onCapture: (blob: Blob, url: string) => void;
   onError: (error: string) => void;
+  totalTomas?: number;
+  infoMessage?: string | null;
 }
 
 // Props del componente de vista previa

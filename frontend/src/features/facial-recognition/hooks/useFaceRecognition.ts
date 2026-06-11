@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { recognitionService } from '../services/recognitionService';
 import type { RecognitionResponse, RecognitionStatusType } from '../types/recognition.types';
+import { parseError } from '../../../utils/errorParser';
 
 export const useFaceRecognition = () => {
   const [status, setStatus] = useState<RecognitionStatusType>('idle');
@@ -23,36 +24,7 @@ export const useFaceRecognition = () => {
         setStatus('no_match');
       }
     } catch (err: unknown) {
-      let errorMsg = 'Error al realizar el reconocimiento.';
-
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosErr = err as {
-          response?: {
-            data?: {
-              detail?: unknown;
-            };
-          };
-          message?: string;
-        };
-
-        const detail = axiosErr.response?.data?.detail;
-
-        if (Array.isArray(detail) && detail.length > 0) {
-          errorMsg =
-            typeof detail[0] === 'object' &&
-              detail[0] !== null &&
-              'msg' in detail[0]
-              ? String(detail[0].msg)
-              : JSON.stringify(detail[0]);
-        } else if (typeof detail === 'string') {
-          errorMsg = detail;
-        } else {
-          errorMsg = axiosErr.message || errorMsg;
-        }
-      } else if (err instanceof Error) {
-        errorMsg = err.message;
-      }
-
+      const errorMsg = parseError(err, 'Error al realizar el reconocimiento.');
       setError(errorMsg);
       setStatus('error');
     }

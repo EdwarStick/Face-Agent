@@ -14,10 +14,17 @@ from app.rostros.schemas import RegistroRostroRequest, RostroResponse
 class RostrosCountResponse(BaseModel):
     total: int
 
+
+class RegistroResponse(BaseModel):
+    status: str
+    message: str
+    total: int
+
+
 router = APIRouter()
 
 
-@router.post("/", response_model=RostroResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=RegistroResponse, status_code=status.HTTP_201_CREATED)
 def registrar_rostro(data: RegistroRostroRequest, db: Session = Depends(get_db)):
     try:
         return service.registrar_rostro(db, data)

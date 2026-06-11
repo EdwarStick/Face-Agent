@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { employeeService } from '../services/employeeService';
 import type { EmpleadoResponse, EmpleadoCreate, EmpleadoUpdate } from '../types';
+import { parseError } from '../../../utils/errorParser';
 
 export const useEmployees = () => {
   const [employees, setEmployees] = useState<EmpleadoResponse[]>([]);
@@ -14,7 +15,7 @@ export const useEmployees = () => {
       const data = await employeeService.getEmployees();
       setEmployees(data);
     } catch (err: any) {
-      setError(err?.response?.data?.detail || err?.message || 'Error al obtener empleados');
+      setError(parseError(err, 'Error al obtener empleados'));
     } finally {
       setLoading(false);
     }
@@ -28,7 +29,7 @@ export const useEmployees = () => {
       setEmployees((prev) => [...prev, newEmployee]);
       return newEmployee;
     } catch (err: any) {
-      const msg = err?.response?.data?.detail || err?.message || 'Error al crear empleado';
+      const msg = parseError(err, 'Error al crear empleado');
       setError(msg);
       throw new Error(msg);
     } finally {
@@ -44,7 +45,7 @@ export const useEmployees = () => {
       setEmployees((prev) => prev.map((emp) => (emp.id === id ? updated : emp)));
       return updated;
     } catch (err: any) {
-      const msg = err?.response?.data?.detail || err?.message || 'Error al actualizar empleado';
+      const msg = parseError(err, 'Error al actualizar empleado');
       setError(msg);
       throw new Error(msg);
     } finally {
@@ -61,7 +62,7 @@ export const useEmployees = () => {
         prev.map((emp) => (emp.id === id ? { ...emp, activo: false } : emp))
       );
     } catch (err: any) {
-      const msg = err?.response?.data?.detail || err?.message || 'Error al eliminar empleado';
+      const msg = parseError(err, 'Error al eliminar empleado');
       setError(msg);
       throw new Error(msg);
     } finally {
@@ -97,7 +98,7 @@ export const useEmployeeDetail = (id?: string) => {
       const data = await employeeService.getEmployee(id);
       setEmployee(data);
     } catch (err: any) {
-      setError(err?.response?.data?.detail || err?.message || 'Error al obtener el detalle del empleado');
+      setError(parseError(err, 'Error al obtener el detalle del empleado'));
     } finally {
       setLoading(false);
     }

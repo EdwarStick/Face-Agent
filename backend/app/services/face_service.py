@@ -9,8 +9,6 @@ from deepface import DeepFace
 # pyrefly: ignore [missing-import]
 from loguru import logger
 
-from app.core.config import settings
-
 
 def imagen_base64_a_array(imagen_base64: str) -> np.ndarray:
     """Convierte imagen base64 a array numpy para OpenCV."""
@@ -37,9 +35,9 @@ def generar_embedding(imagen_base64: str) -> list[float]:
     try:
         resultado = DeepFace.represent(
             img_path=img,
-            model_name=settings.face_recognition_model,
-            enforce_detection=True,
-            detector_backend=settings.face_detection_model,
+            model_name="ArcFace",
+            enforce_detection=False,
+            detector_backend="opencv",
         )
     except ValueError as e:
         if "Face could not be detected" in str(e):
@@ -51,6 +49,6 @@ def generar_embedding(imagen_base64: str) -> list[float]:
     if not resultado:
         raise ValueError("No se detectó ningún rostro en la imagen")
 
-    embedding = resultado[0]["embedding"]
+    embedding = np.round(resultado[0]["embedding"], 5).tolist()
     logger.info(f"Embedding generado: {len(embedding)} dimensiones")
     return embedding

@@ -14,6 +14,7 @@ from app.empleados.router import router as empleados_router
 from app.rostros.router import router as rostros_router
 from app.reconocimiento.router import router as reconocimiento_router
 from app.asistencias.router import router as asistencias_router
+from app.chat.router import router as chat_router
 
 api_router = APIRouter()
 
@@ -37,7 +38,12 @@ api_router.include_router(
 api_router.include_router(
     asistencias_router,
     prefix="/asistencias",
-    tags=["Asistencias"]
+    tags=["Control de Asistencia"]
+)
+api_router.include_router(
+    chat_router,
+    prefix="/chat",
+    tags=["Chat IA"]
 )
 
 # Future feature routers — uncomment as features are implemented:
