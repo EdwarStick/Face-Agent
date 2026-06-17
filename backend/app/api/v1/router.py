@@ -18,6 +18,7 @@ from app.asistencias.router import router as asistencias_router
 from app.chat.router import router as chat_router
 # pyrefly: ignore [missing-import]
 from app.horarios.router import router as horarios_router
+from app.reportes.router import router as reportes_router
 
 api_router = APIRouter()
 
@@ -52,6 +53,11 @@ api_router.include_router(
     horarios_router,
     prefix="/horarios",
     tags=["Horarios"]
+)
+api_router.include_router(
+    reportes_router,
+    prefix="/reportes",
+    tags=["Reportes"]
 )
 
 # Future feature routers — uncomment as features are implemented:
