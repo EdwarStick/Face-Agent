@@ -3,75 +3,89 @@
 ## Project structure
 
 ```
-backend/       ← all source code (FastAPI app)
+backend/     FastAPI app (all Python source code)
+frontend/    React SPA (Vite + TS 6 + MUI + React Router + TanStack Query + Zustand)
 ```
 
-All commands run from `backend/`. No monorepo, no frontend yet.
+Commands run from `backend/` or `frontend/`.
+
+## Commands — backend
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+python -m pip install -r requirements.txt
+cp .env.example .env                    # fill DB values
+alembic upgrade head                    # 4 migrations exist
+uvicorn app.main:app --reload           # http://localhost:8000
+pytest tests/ -v                        # 2 test files only
+alembic revision --autogenerate -m "msg"
+```
+
+## Commands — frontend
+
+```bash
+npm install
+npm run dev                              # Vite :5173
+npm run build                            # tsc -b && vite build
+npm run lint                             # eslint .
+```
+
+`VITE_API_URL=http://localhost:8000/api/v1` in `frontend/.env`.
 
 ## Stack
 
-- **Framework**: FastAPI (sync, not async routes yet)
-- **ORM**: SQLAlchemy 2.0 (sync) + Alembic
-- **DB**: PostgreSQL (Aiven cloud), config via `.env`
-- **Face**: DeepFace (Facenet512) + OpenCV, embeddings stored as JSON
-- **Config**: Pydantic Settings v2 from `.env`
-- **Auth**: python-jose + passlib (no actual auth implemented yet)
-- **No pyproject.toml, no ruff, no formatter, no pre-commit, no CI**
+- **Framework**: FastAPI (sync routes), loguru, Pydantic Settings v2 from `app/core/config.py`
+- **ORM**: SQLAlchemy 2.0 (sync) + Alembic (URL overridden via `alembic/env.py` from Settings)
+- **DB**: PostgreSQL; `?sslmode=require` appended in `database_url` property when not localhost
+- **Face**: DeepFace (ArcFace) + OpenCV; embeddings stored as JSON (`list[float]`)
+- **Auth**: python-jose + passlib in requirements but **not implemented**
+- **AI**: Groq SDK (`llama-3.1-8b-instant`) for chat endpoint
 
-## Commands
+## Missing from requirements.txt
 
-```bash
-python -m venv .venv                     # create venv
-.venv\Scripts\activate                   # activate (Windows)
-python -m pip install -r requirements.txt
-cp .env.example .env                     # then fill in DB values
-alembic upgrade head                     # run migrations
-python -m uvicorn app.main:app --reload  # dev server
-pytest tests/ -v                         # all tests
-alembic revision --autogenerate -m "msg" # new migration
-```
+`deepface` and `groq` — install manually; imports use `# pyrefly: ignore [missing-import]`
 
-## Architecture conventions
+## .env.example gaps
 
-- **Spanish naming** for business domains: `empleados/`, `rostros/`, `reconocimiento/`
-- **Module-per-domain** layout: each domain has its own `router.py`, `schemas.py`, `service.py` under `app/<domain>/`
-- **`app/services/`** holds shared services (face_service, recognition_service, groq_service)
-- **`app/models/`** holds SQLAlchemy models; alembic autogenerate relies on `app/models/__init__.py` importing all models
-- **`app/api/v1/router.py`** aggregates domain routers; new feature routers get registered there
-- DB column names are Spanish (`fecha_creacion`, `fecha_actualizacion`) but Python attributes are English
-- Soft delete: `activo` boolean flag, queries always filter `activo == True`
-- Employees use UUID PK via `UUIDMixin`; Rostro model declares its own UUID PK inline
-- `TimestampMixin` available but not used; `Empleado` maps audit columns manually
-- All external imports annotated with `# pyrefly: ignore [missing-import]`
+`GROQ_API_KEY` / `GROQ_MODEL` not documented — must be added manually for chat to work. `FACE_RECOGNITION_MODEL` says `Facenet512` but actual code uses `ArcFace`.
 
-## API endpoints
+## Architecture
 
-| Prefix | Module | Purpose |
-|---|---|---|
-| `/api/v1/health` | health.py | Health check |
-| `/api/v1/empleados` | empleados/ | CRUD employees |
-| `/api/v1/rostros` | rostros/ | Register face (base64 image → embedding) |
-| `/api/v1/reconocimiento/identificar` | reconocimiento/ | Match face against DB embeddings |
-| `/api/v1/asistencias` | asistencias/ | Register entry/exit, list today's attendance |
-| `/api/v1/chat` | chat/ | AI chat about employees & attendance via Groq |
+- **Spanish naming** for domains: `empleados/`, `rostros/`, `reconocimiento/`, `asistencias/`, `horarios/`, `reportes/`
+- **Module-per-domain**: each has `router.py`, `schemas.py`, `service.py` under `app/<domain>/`
+- **`app/services/`** shared services: `face_service.py`, `recognition_service.py`, `groq_service.py`
+- **`app/models/__init__.py`** imports all models (needed by Alembic autogenerate)
+- **`app/api/v1/router.py`** aggregates all domain routers
+- Soft delete via `activo` boolean; queries filter `activo == True`
+- `Empleado` uses UUID PK via `UUIDMixin`; other models declare UUID inline
+- Face threshold: `0.65` cosine similarity (hardcoded in `recognition_service.py:53`); `face_similarity_threshold` in Settings (0.40) is unused
+- Rostro service enforces max 4 face photos per employee (`MAX_TOMAS = 4` in `rostros/service.py`)
+- `marcaciones/` directory is empty stub; `reportes/` also a stub (no router wired yet)
 
-## Testing quirks
+## API endpoints (`/api/v1`)
 
-- `conftest.py` adds `backend/` to `sys.path` so imports work from root
-- Uses sync `TestClient` (not async)
-- Health test works without a real DB (`degraded` status)
-- No tests yet for empleados, rostros, or reconocimiento endpoints
-- No coverage config, no pytest config file
+| Prefix | File | Purpose |
+|--------|------|---------|
+| `/health` | api/v1/endpoints/health.py | DB status → ok/degraded |
+| `/empleados` | empleados/router.py | CRUD (soft delete) |
+| `/rostros` | rostros/router.py | Register face base64→embedding |
+| `/reconocimiento` | reconocimiento/router.py | `/identificar` match, `/marcar` recognize+toggle |
+| `/asistencias` | asistencias/router.py | Entry/exit, today's list, stats |
+| `/horarios` | horarios/router.py | CRUD schedules per weekday |
+| `/chat` | chat/router.py | AI chat via Groq with live DB context |
 
-## Important gotchas
+## Testing
 
-- **Groq chat** uses `llama3-8b-8192` by default, configurable via `GROQ_MODEL` in `.env`
-- **`chat/` router** builds context from live DB (active employees, today's attendance) and sends it to Groq
-- **No migrations exist yet** — `alembic/versions/` only has `.gitkeep`; first `alembic revision --autogenerate` will create initial schema
-- DB must be reachable or health check returns `degraded`; app still starts
-- Face embedding uses DeepFace `represent()` with `detector_backend="opencv"`, `model_name="Facenet512"`
-- Recognition threshold is `0.70` cosine similarity (hardcoded in `recognition_service.py`)
-- `face_similarity_threshold` in Settings (0.40) is unused — the actual threshold lives in code
-- Secondary name/surname fields default to `""` not `None` in service layer
-- `seg_nombres` and `seg_apellido` in `EmpleadoResponse` are `str` (not Optional)
-- `convertir.py` and `foto.jpg` at root of `backend/` are utility artifacts
+- `conftest.py` adds `backend/` to `sys.path`; sync `TestClient` fixture (module scope)
+- 2 test files: `test_health.py` (works without real DB, returns `degraded`), `test_empleados.py` (full CRUD + soft delete)
+- No coverage/pytest config; no tests for rostros, reconocimiento, asistencias, horarios, chat
+
+## Gotchas
+
+- DeepFace: `represent(img, model_name="ArcFace", enforce_detection=False, detector_backend="opencv")` — `opencv` = no GPU
+- `generar_embedding` returns `np.round(resultado[0]["embedding"], 5).tolist()`
+- `insightface` + `onnxruntime` pinned in requirements but unused directly (DeepFace wraps them)
+- DB unreachable → app starts fine; health returns `degraded`; all DB endpoints 500
+- Alembic chain: `001` (marcaciones) → `1803fadc9b9f` (drop marcaciones) → `002` (empleados/rostros/asistencias) → `003` (horarios)
+- `seg_nombres` / `seg_apellido` default to `""` in schema; service handles `None→""` on update but not create
