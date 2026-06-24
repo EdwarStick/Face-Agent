@@ -10,7 +10,9 @@ from app.horarios.schemas import HorarioCreate, HorarioUpdate
 DIAS = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"]
 
 
-def _parse_hora(value: str) -> time:
+def _parse_hora(value: str | time) -> time:
+    if isinstance(value, time):
+        return value
     partes = value.split(":")
     return time(int(partes[0]), int(partes[1]))
 
