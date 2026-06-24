@@ -5,45 +5,52 @@ import Typography from '@mui/material/Typography';
 import PeopleIcon from '@mui/icons-material/People';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import type { DashboardSummary } from '../types/attendance.types';
+import LogoutIcon from '@mui/icons-material/Logout';
+import type { ResumenDiario } from '../types';
 
 interface Props {
-  summary: DashboardSummary;
+  resumen: ResumenDiario;
 }
 
 const cards = [
   {
-    label: 'Total',
-    value: (s: DashboardSummary) => s.total,
+    label: 'Total Empleados',
+    value: (r: ResumenDiario) => r.total_empleados,
     icon: <PeopleIcon sx={{ fontSize: 32 }} />,
     color: '#2563eb',
     bg: '#eff6ff',
   },
   {
     label: 'Presentes',
-    value: (s: DashboardSummary) => s.presentes,
+    value: (r: ResumenDiario) => r.presentes,
     icon: <CheckCircleIcon sx={{ fontSize: 32 }} />,
     color: '#16a34a',
     bg: '#f0fdf4',
   },
   {
     label: 'Ausentes',
-    value: (s: DashboardSummary) => s.ausentes,
+    value: (r: ResumenDiario) => r.ausentes,
     icon: <CancelIcon sx={{ fontSize: 32 }} />,
     color: '#dc2626',
     bg: '#fef2f2',
   },
   {
-    label: 'Pendientes',
-    value: (s: DashboardSummary) => s.pendientes,
-    icon: <AccessTimeIcon sx={{ fontSize: 32 }} />,
+    label: 'Ya Salieron',
+    value: (r: ResumenDiario) => r.ya_salieron,
+    icon: <LogoutIcon sx={{ fontSize: 32 }} />,
     color: '#d97706',
     bg: '#fffbeb',
   },
+  {
+    label: 'Asistencia',
+    value: (r: ResumenDiario) => `${r.porcentaje_asistencia}%`,
+    icon: <CheckCircleIcon sx={{ fontSize: 32 }} />,
+    color: '#7c3aed',
+    bg: '#f5f3ff',
+  },
 ];
 
-export function AttendanceSummaryCards({ summary }: Props) {
+export function ResumenCards({ resumen }: Props) {
   return (
     <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap' }}>
       {cards.map((card) => (
@@ -66,7 +73,7 @@ export function AttendanceSummaryCards({ summary }: Props) {
               {card.label}
             </Typography>
             <Typography variant="h5" sx={{ fontWeight: 700, color: card.color }}>
-              {card.value(summary)}
+              {card.value(resumen)}
             </Typography>
           </Box>
         </Paper>

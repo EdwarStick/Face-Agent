@@ -23,8 +23,8 @@ class HorarioResponse(BaseModel):
     id: uuid.UUID
     empleado_id: uuid.UUID
     dia_semana: int
-    hora_entrada: str
-    hora_salida: str
+    hora_entrada: time
+    hora_salida: time
     activo: bool
 
     model_config = ConfigDict(from_attributes=True)

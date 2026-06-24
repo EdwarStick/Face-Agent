@@ -6,6 +6,7 @@ import EmployeeDetailPage from '../features/empleados/pages/EmployeeDetailPage';
 import { RecognitionPage } from '../features/facial-recognition/pages/RecognitionPage';
 import { AttendancePage } from '../features/asistencia/pages/AttendancePage';
 import { HorariosPage } from '../features/horarios/pages/HorariosPage';
+import { DashboardReportes } from '../features/reportes/pages/DashboardReportes';
 
 export const router = createBrowserRouter([
   {
@@ -35,6 +36,10 @@ export const router = createBrowserRouter([
       {
         path: 'horarios',
         element: <HorariosPage />,
+      },
+      {
+        path: 'reportes',
+        element: <DashboardReportes />,
       },
     ],
   },
