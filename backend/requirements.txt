@@ -20,11 +20,17 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.9
 
-# Computer Vision
+# AI / Computer Vision
+deepface
+retina-face
+tensorflow
+tf-keras
+groq
+
 opencv-python==4.13.0.92
 insightface>=0.7.3
 onnxruntime>=1.18.0
-numpy==2.4.6
+numpy
 
 # Testing
 pytest==8.2.0
