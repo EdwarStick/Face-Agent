@@ -48,6 +48,13 @@ async def lifespan(app: FastAPI):
             "`alembic upgrade head`"
         )
 
+    # Precargar modelo DeepFace en memoria al arrancar para evitar 504 Gateway Timeout
+    try:
+        from app.services.face_service import precargar_modelo
+        precargar_modelo()
+    except Exception as e:
+        logger.warning(f"No se pudo precargar modelo facial en startup: {e}")
+
     yield  # Application runs here
 
     # ── Shutdown ──────────────────────────────────────────────────────────────

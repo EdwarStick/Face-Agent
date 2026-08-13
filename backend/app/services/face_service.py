@@ -83,3 +83,14 @@ def generar_embedding(imagen_base64: str) -> list[float]:
         f"Embedding generado | modelo={modelo} | dimensiones={len(embedding)}"
     )
     return embedding
+
+
+def precargar_modelo() -> None:
+    """Pre-carga el modelo Facenet512 en memoria al iniciar la app para evitar timeouts en la 1ª petición."""
+    try:
+        modelo = settings.face_recognition_model
+        logger.info(f"Precargando modelo facial '{modelo}' en memoria...")
+        DeepFace.build_model(modelo)
+        logger.info(f"Modelo '{modelo}' precargado exitosamente.")
+    except Exception as e:
+        logger.warning(f"No se pudo precargar el modelo facial: {e}")

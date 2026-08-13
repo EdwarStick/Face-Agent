@@ -250,14 +250,13 @@ class TestThresholdDinamico:
 
     def test_falso_negativo_corregido_con_threshold_bajo(self):
         """
-        Escenario FN: similitud buena (0.45) + threshold bajo (0.30).
+        Escenario FN: similitud real alta (0.75) + threshold recomendado (0.65).
         → El sistema SÍ debe reconocer al empleado.
-        Garantiza que bajar FACE_MATCH_THRESHOLD reduce los falsos negativos.
         """
         from app.services import recognition_service
 
-        similitud_real = 0.45
-        threshold_configurado = 0.30
+        similitud_real = 0.75
+        threshold_configurado = 0.65
 
         db_mock, emb_consulta = _mock_db_con_rostro(similitud_real)
 

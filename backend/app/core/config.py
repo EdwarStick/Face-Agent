@@ -84,10 +84,9 @@ class Settings(BaseSettings):
     # Changing this requires re-enrolling ALL employee faces.
     face_recognition_model: str = "Facenet512"
     # Canonical match threshold read by the recognition pipeline.
-    # Default 0.30 is the recommended starting point for Facenet512 + cosine.
-    # Tune via FACE_MATCH_THRESHOLD in .env (raise to reduce false positives,
-    # lower to reduce false negatives).
-    face_match_threshold: float = 0.30
+    # Default 0.65 (65% similarity) for Facenet512 + cosine.
+    # Note: Cosine similarity threshold >= 0.65 corresponds to Cosine distance <= 0.35.
+    face_match_threshold: float = 0.65
     # Legacy field — kept for backward-compat with older .env files.
     face_similarity_threshold: float = 0.40
 
