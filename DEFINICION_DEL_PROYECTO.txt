@@ -1,0 +1,146 @@
+========================================
+  FACEAgg — DEFINICIÓN DEL PROYECTO
+========================================
+
+1. NOMBRE DEL PROYECTO
+   FaceAttendance AI (FaceAgg)
+
+2. DESCRIPCIÓN GENERAL
+   Sistema inteligente de control de asistencia mediante reconocimiento
+   facial. Permite identificar empleados a través de visión por computadora
+   y registrar automáticamente horarios de entrada y salida. Genera
+   reportes de asistencia, tardanzas, horas trabajadas y horas extra,
+   automatizando procesos manuales.
+
+3. ARQUITECTURA
+   - Backend: FastAPI (Python 3.12+) con SQLAlchemy 2.0, Alembic,
+     PostgreSQL (Aiven Cloud), Pydantic v2, Loguru.
+   - Frontend: React 19 + TypeScript, Vite 8, Material UI 9,
+     TanStack React Query, Zustand, Axios.
+   - Infraestructura: Docker Compose (backend + frontend + Nginx).
+
+4. MÓDULOS / FUNCIONES DEL SISTEMA
+
+   A) Empleados (CRUD)
+      - Crear, listar, obtener, actualizar y eliminar (desactivación
+        lógica) empleados.
+      - Campos: código_empleado, nombres, apellidos, correo, teléfono,
+        cargo, área, activo.
+      - Validaciones: código_empleado y correo únicos.
+
+   B) Registro Biométrico (Rostros)
+      - Registrar rostros de empleados (imagen base64).
+      - Generar embedding facial usando DeepFace (modelo ArcFace).
+      - Almacenar vector facial en BD (JSON).
+      - Contar y listar rostros por empleado.
+
+   C) Reconocimiento Facial
+      - POST /reconocimiento/identificar: identifica a un empleado
+        por similitud coseno contra rostros registrados (umbral 0.65).
+      - POST /reconocimiento/marcar: identifica y registra asistencia
+        automáticamente en un solo paso.
+
+   D) Control de Asistencia
+      - Registrar entrada y salida manual.
+      - Listar asistencias de hoy, por empleado, y últimas N.
+      - Obtener estadísticas (total presentes, ausentes, etc.).
+      - Cálculo de horas trabajadas y estado (a tiempo, tarde, etc.).
+
+   E) Horarios
+      - CRUD de horarios por empleado y día de la semana.
+      - Campos: día_semana, hora_entrada, hora_salida, activo.
+
+   F) Reportes
+      - Resumen diario de asistencias.
+      - Reporte de asistencias del día actual.
+      - Estadísticas individuales por empleado.
+
+   G) Chat IA (Groq)
+      - Consultas en lenguaje natural sobre empleados y asistencias.
+      - Construcción automática de contexto con datos reales de BD.
+      - Integración con Groq API (LLM).
+
+   H) Health Check
+      - Endpoint de verificación de salud del servidor.
+
+5. TECNOLOGÍAS PRINCIPALES
+   - Python 3.12+, FastAPI, SQLAlchemy 2.0, Alembic, PostgreSQL.
+   - DeepFace (ArcFace), OpenCV, NumPy.
+   - React 19, TypeScript, Material UI 9, Vite 8.
+   - Docker, Docker Compose, Nginx.
+   - Groq API (chat inteligente).
+   - Aiven Cloud (base de datos PostgreSQL).
+
+6. BASE DE DATOS (Tablas principales)
+   - empleados: datos del empleado con UUID y auditoría.
+   - rostros: vectores faciales (JSON) asociados a empleados.
+   - asistencias: registros de entrada/salida con confianza y estado.
+   - horarios: horarios por empleado y día de semana.
+
+========================================
+  COSAS A MEJORAR / FUTURAS MEJORAS
+========================================
+
+1. RECONOCIMIENTO FACIAL
+   - Mejorar precisión del reconocimiento con FaceNet512 o modelos
+     más avanzados.
+   - Implementar detección de spoofing (liveness detection) para
+     evitar fraudes con fotos o videos.
+   - Soporte para múltiples rostros en una sola imagen.
+   - Implementar pipeline de procesamiento asíncrono con colas (Celery/
+     Redis) para no bloquear la API.
+
+2. FRONTEND
+   - Completar la interfaz web (actualmente en desarrollo inicial).
+   - Componente de cámara en vivo para capturar rostros en tiempo real.
+   - Panel de administración con dashboards y gráficos.
+   - Exportación a PDF/Excel desde el frontend (librerías ya incluidas).
+   - Notificaciones en tiempo real (WebSockets) para eventos de asistencia.
+
+3. SEGURIDAD Y AUTENTICACIÓN
+   - Implementar autenticación (JWT / OAuth2) y roles de usuario
+     (admin, supervisor, empleado).
+   - Cifrado de imágenes y vectores faciales.
+   - Rate limiting en endpoints de reconocimiento.
+
+4. INFRAESTRUCTURA Y DESPLIEGUE
+   - CI/CD con GitHub Actions.
+   - Despliegue en cloud (AWS, GCP, Azure).
+   - Uso de CDN para almacenamiento de imágenes.
+   - Balanceo de carga y escalado horizontal.
+
+5. REPORTES Y ANALÍTICA
+   - Reportes semanales, mensuales y anuales.
+   - Gráficos de tendencias de asistencia.
+   - Exportación avanzada (PDF, Excel, CSV).
+   - Envío automático de reportes por correo.
+
+6. INTEGRACIONES EXTERNAS
+   - Azure AI Services / AWS Rekognition como backend alternativo
+     de reconocimiento facial.
+   - Integración con sistemas de nómina (contabilidad).
+   - APIs para consumidores externos (webhooks).
+   - Notificaciones por correo/Slack/WhatsApp.
+
+7. RENDIMIENTO
+   - Cache de embeddings faciales en memoria (Redis).
+   - Indexación de vectores faciales (FAISS, pgvector) para búsqueda
+     rápida.
+   - Paginación y filtros avanzados en endpoints GET.
+   - Optimización de consultas SQL (N+1 queries).
+
+8. TESTING
+   - Aumentar cobertura de tests unitarios y de integración.
+   - Tests de carga para endpoint de reconocimiento.
+   - Pruebas E2E con Playwright o Cypress.
+
+9. EXPERIENCIA DE USUARIO
+   - Modo offline / soporte para redes lentas.
+   - Interfaz responsive para dispositivos móviles.
+   - Multilenguaje (i18n).
+   - Historial de cambios y auditoría de acciones.
+
+10. LEGALES / CUMPLIMIENTO
+    - Consentimiento para almacenamiento de datos biométricos.
+    - Cumplimiento con GDPR / Ley de Datos Personales.
+    - Política de retención y eliminación de datos faciales.

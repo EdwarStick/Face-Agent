@@ -75,10 +75,35 @@ class Settings(BaseSettings):
     azure_endpoint: str = ""
     azure_region: str = ""
 
-    # ── Face Recognition (future) ─────────────────────────────────────────────
+    # ── Face Recognition ──────────────────────────────────────────────────────
     face_detection_model: str = "opencv"
+    # Canonical recognition model — must match the embeddings stored in DB.
+    # Changing this requires re-enrolling ALL employee faces.
     face_recognition_model: str = "Facenet512"
+    # Canonical match threshold read by the recognition pipeline.
+    # Default 0.30 is the recommended starting point for Facenet512 + cosine.
+    # Tune via FACE_MATCH_THRESHOLD in .env (raise to reduce false positives,
+    # lower to reduce false negatives).
+    face_match_threshold: float = 0.30
+    # Legacy field — kept for backward-compat with older .env files.
     face_similarity_threshold: float = 0.40
+
+    # ── Image Quality Validation ───────────────────────────────────────────────
+    # Umbrales para FaceQualityValidator (quality_validator.py).
+    # Ajusta los valores en .env sin necesidad de tocar el código.
+    #
+    # image_min_blur_score : Varianza mínima de Laplacian.
+    #   < 80  → imagen borrosa rechazada.  Sube si recibes falsos rechazos en
+    #           entornos con buena cámara; baja en cámaras de baja resolución.
+    #
+    # image_min_brightness : Luminancia mínima (canal L de LAB, escala 0-255).
+    #   < 40  → subexposición — imagen demasiado oscura.
+    #
+    # image_max_brightness : Luminancia máxima (canal L de LAB, escala 0-255).
+    #   > 220 → sobreexposición — imagen saturada de luz.
+    image_min_blur_score: float = 80.0
+    image_min_brightness: float = 40.0
+    image_max_brightness: float = 220.0
 
     model_config = SettingsConfigDict(
         env_file=".env",

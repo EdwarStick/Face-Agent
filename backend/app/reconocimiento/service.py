@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 import uuid
 from sqlalchemy.orm import Session
 from loguru import logger
@@ -45,9 +45,19 @@ def marcar_con_reconocimiento(db: Session, imagen_base64: str) -> dict:
 
     empleado_id = resultado["empleado_id"]
 
+    # ── Bug fix: filtrar ESTRICTAMENTE por fecha de hoy ──────────────────────
+    # Sin este filtro, una asistencia abierta de un día anterior (hora_salida
+    # IS NULL) dispararía erróneamente un cierre de salida en lugar de registrar
+    # una nueva entrada.
+    hoy = datetime.now(timezone.utc).date()
+    inicio_hoy = datetime(hoy.year, hoy.month, hoy.day, tzinfo=timezone.utc)
+    fin_hoy = datetime(hoy.year, hoy.month, hoy.day + 1, tzinfo=timezone.utc)
+
     entrada_activa = db.query(Asistencia).filter(
         Asistencia.empleado_id == empleado_id,
-        Asistencia.hora_salida == None
+        Asistencia.hora_salida == None,
+        Asistencia.hora_entrada >= inicio_hoy,
+        Asistencia.hora_entrada < fin_hoy,
     ).first()
 
     confianza = resultado.get("confianza")

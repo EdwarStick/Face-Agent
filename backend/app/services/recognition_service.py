@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 # pyrefly: ignore [missing-import]
 from loguru import logger
 
+from app.core.config import settings
 from app.models.rostro import Rostro
 from app.models.empleado import Empleado
 from app.services.face_service import generar_embedding
@@ -22,7 +23,16 @@ def identificar_empleado(db: Session, imagen_base64: str) -> dict:
     Genera embedding de la imagen recibida y lo compara
     contra todos los rostros registrados en BD.
     Retorna el empleado con mayor similitud si supera el umbral.
+
+    El umbral se lee de FACE_MATCH_THRESHOLD en .env (default 0.30 para Facenet512).
     """
+    # ── Umbral dinámico (no hardcodeado) ─────────────────────────────────────
+    umbral = settings.face_match_threshold
+    logger.info(
+        f"Pipeline de reconocimiento iniciado | "
+        f"modelo={settings.face_recognition_model} | umbral={umbral}"
+    )
+
     # Generar embedding de la imagen entrante
     embedding_nuevo = generar_embedding(imagen_base64)
 
@@ -45,14 +55,12 @@ def identificar_empleado(db: Session, imagen_base64: str) -> dict:
             mejor_similitud = similitud
             mejor_rostro = rostro
 
-    logger.info(f"Mejor similitud encontrada: {mejor_similitud:.4f}")
+    logger.info(
+        f"Comparación finalizada | mejor_similitud={mejor_similitud:.4f} | "
+        f"umbral={umbral} | superado={mejor_similitud >= umbral}"
+    )
 
-    # Umbral 0.65 para ArcFace con similitud coseno.
-    # Facenet512 usaba 0.70; ArcFace requiere un umbral más bajo
-    # para evitar falsos negativos manteniendo precisión aceptable.
-    UMBRAL = 0.65
-
-    if mejor_similitud >= UMBRAL:
+    if mejor_similitud >= umbral:
         empleado = mejor_rostro.empleado
         return {
             "reconocido": True,

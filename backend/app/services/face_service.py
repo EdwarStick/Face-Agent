@@ -9,6 +9,8 @@ from deepface import DeepFace
 # pyrefly: ignore [missing-import]
 from loguru import logger
 
+from app.core.config import settings
+
 
 def imagen_base64_a_array(imagen_base64: str) -> np.ndarray:
     """Convierte imagen base64 a array numpy para OpenCV."""
@@ -28,27 +30,56 @@ def imagen_base64_a_array(imagen_base64: str) -> np.ndarray:
 def generar_embedding(imagen_base64: str) -> list[float]:
     """
     Recibe imagen en base64, detecta el rostro y retorna el embedding.
-    Lanza ValueError si no detecta rostro o si ocurre un error de procesamiento.
+
+    Reglas de validación (producción):
+    - enforce_detection=True  → rechaza imágenes sin rostro detectable.
+    - Múltiples rostros        → rechaza si se detecta más de una persona.
+    - Modelo                  → Facenet512 (leído de settings, no hardcodeado).
+
+    Lanza ValueError en todos los casos de imagen inválida.
     """
+    modelo = settings.face_recognition_model   # "Facenet512"
+    detector = settings.face_detection_model   # "opencv"
+
     img = imagen_base64_a_array(imagen_base64)
+
+    logger.info(
+        f"Generando embedding | modelo={modelo} | detector={detector} | "
+        f"imagen shape={img.shape}"
+    )
 
     try:
         resultado = DeepFace.represent(
             img_path=img,
-            model_name="ArcFace",
-            enforce_detection=False,
-            detector_backend="opencv",
+            model_name=modelo,
+            enforce_detection=True,   # ← PRODUCCIÓN: rechaza imágenes sin rostro
+            detector_backend=detector,
         )
     except ValueError as e:
-        if "Face could not be detected" in str(e):
-            raise ValueError("No se detectó ningún rostro en la imagen")
+        # DeepFace lanza ValueError cuando enforce_detection=True y no encuentra rostro
+        msg = str(e)
+        if "Face could not be detected" in msg or "face" in msg.lower():
+            raise ValueError(
+                "No se detectó ningún rostro válido en la imagen. "
+                "Asegúrese de que el rostro esté bien iluminado y visible."
+            )
         raise ValueError(f"Error al procesar la imagen con el modelo facial: {e}")
     except Exception as e:
         raise ValueError(f"Error inesperado al generar el embedding facial: {e}")
+
+    # ── Guardia: múltiples rostros ────────────────────────────────────────────
+    # DeepFace.represent devuelve una lista con un dict por cada rostro detectado.
+    if len(resultado) > 1:
+        raise ValueError(
+            f"Se detectaron {len(resultado)} rostros en la imagen. "
+            "Por favor, envíe una imagen con una sola persona visible."
+        )
 
     if not resultado:
         raise ValueError("No se detectó ningún rostro en la imagen")
 
     embedding = np.round(resultado[0]["embedding"], 5).tolist()
-    logger.info(f"Embedding generado: {len(embedding)} dimensiones")
+    logger.info(
+        f"Embedding generado | modelo={modelo} | dimensiones={len(embedding)}"
+    )
     return embedding

@@ -7,6 +7,7 @@ from sqlalchemy import func as sqlfunc
 from app.models.asistencia import Asistencia
 from app.models.empleado import Empleado
 from app.asistencias.schemas import RegistrarEntradaRequest, RegistrarSalidaRequest
+from app.horarios import service as horarios_service
 
 
 def registrar_entrada(db: Session, data: RegistrarEntradaRequest) -> Asistencia:
@@ -21,10 +22,29 @@ def registrar_entrada(db: Session, data: RegistrarEntradaRequest) -> Asistencia:
     if entrada_hoy:
         raise ValueError("El empleado ya registró una entrada hoy")
 
+    ahora = datetime.now(timezone.utc)
+
+    # ── Resolución de horario efectivo (herencia global/específico) ───────────
+    # dia_semana: 0=Lunes … 6=Domingo (mismo estándar que el módulo de horarios)
+    dia_semana = ahora.weekday()
+    horario = horarios_service.resolver_horario_efectivo(
+        db, data.empleado_id, dia_semana
+    )
+
+    # Calcular estado basado en el horario efectivo
+    if horario:
+        hora_local = ahora.astimezone().time()
+        estado = horarios_service.calcular_estado_marcacion(
+            hora_local, horario, tipo="entrada"
+        )
+    else:
+        # Sin horario definido → se registra como 'presente' sin validar tardanza
+        estado = "presente"
+
     asistencia = Asistencia(
         empleado_id=data.empleado_id,
-        hora_entrada=datetime.now(timezone.utc),
-        estado="presente",
+        hora_entrada=ahora,
+        estado=estado,
         porcentaje_confianza=data.porcentaje_confianza
     )
     db.add(asistencia)
