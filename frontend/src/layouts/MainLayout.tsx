@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ChatBot } from '../features/chat/components/ChatBot';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
@@ -166,6 +167,9 @@ export const MainLayout: React.FC = () => {
       >
         <Outlet />
       </Box>
+
+      {/* ── Chatbot flotante — visible en todas las páginas ── */}
+      <ChatBot />
     </Box>
   );
 };

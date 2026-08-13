@@ -69,6 +69,9 @@ class Settings(BaseSettings):
     # ── Groq AI ───────────────────────────────────────────────────────────────
     groq_api_key: str = ""
     groq_model: str = "llama-3.1-8b-instant"
+    # Modelo dedicado para el agente de chat con Function Calling.
+    # llama-3.3-70b-versatile tiene mejor soporte de tool_use que el modelo rápido.
+    groq_chat_model: str = "llama-3.3-70b-versatile"
 
     # ── Azure AI ──────────────────────────────────────────────────────────────
     azure_subscription_key: str = ""
