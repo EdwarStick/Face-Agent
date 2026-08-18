@@ -60,6 +60,8 @@ def identificar_empleado(db: Session, imagen_base64: str) -> dict:
         f"umbral={umbral} | superado={mejor_similitud >= umbral}"
     )
 
+    confianza_pct = round(mejor_similitud * 100, 1)
+
     if mejor_similitud >= umbral:
         empleado = mejor_rostro.empleado
         return {
@@ -68,12 +70,23 @@ def identificar_empleado(db: Session, imagen_base64: str) -> dict:
             "nombre_completo": f"{empleado.prim_nombre} {empleado.prim_apellido}",
             "cargo": empleado.cargo,
             "area": empleado.area,
-            "confianza": round(mejor_similitud * 100, 2),
-            "mensaje": "Empleado reconocido exitosamente"
+            "confianza": confianza_pct,
+            "mensaje": f"¡Hola {empleado.prim_nombre}! Identificación exitosa ({confianza_pct}% coincidencia)."
         }
+
+    if mejor_similitud >= 0.45:
+        mensaje_fallo = (
+            f"Coincidencia del {confianza_pct}%, pero se requiere al menos {round(umbral * 100)}%. "
+            "Por favor acércate un poco más a la cámara, mira de frente y asegura buena iluminación."
+        )
+    else:
+        mensaje_fallo = (
+            "Rostro no registrado o registrado con muy baja coincidencia. "
+            "Verifica si el empleado fue enrolado previamente."
+        )
 
     return {
         "reconocido": False,
-        "confianza": round(mejor_similitud * 100, 2),
-        "mensaje": "Rostro no reconocido — confianza insuficiente"
+        "confianza": confianza_pct,
+        "mensaje": mensaje_fallo
     }

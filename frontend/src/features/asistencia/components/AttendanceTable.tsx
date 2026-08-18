@@ -18,6 +18,15 @@ interface Props {
   onRowClick: (record: AttendanceRecord) => void;
 }
 
+function formatFechaDisplay(fechaStr: string | null | undefined): string {
+  if (!fechaStr) return '-';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) {
+    const [year, month, day] = fechaStr.split('-').map(Number);
+    return new Date(year, month - 1, day).toLocaleDateString();
+  }
+  return new Date(fechaStr).toLocaleDateString();
+}
+
 export function AttendanceTable({ data, pagination, onPageChange, onLimitChange, onRowClick }: Props) {
   if (data.length === 0) {
     return <AttendanceEmptyState />;
@@ -47,7 +56,7 @@ export function AttendanceTable({ data, pagination, onPageChange, onLimitChange,
               >
                 <TableCell>{row.empleado_nombre}</TableCell>
                 <TableCell>{row.documento}</TableCell>
-                <TableCell>{row.fecha ? new Date(row.fecha).toLocaleDateString() : '-'}</TableCell>
+                <TableCell>{formatFechaDisplay(row.fecha)}</TableCell>
                 <TableCell>
                   {row.hora_entrada
                     ? new Date(row.hora_entrada).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })

@@ -68,10 +68,10 @@ class Settings(BaseSettings):
 
     # ── Groq AI ───────────────────────────────────────────────────────────────
     groq_api_key: str = ""
-    groq_model: str = "llama-3.1-8b-instant"
+    groq_model: str = "openai/gpt-oss-20b"
     # Modelo dedicado para el agente de chat con Function Calling.
-    # llama-3.3-70b-versatile tiene mejor soporte de tool_use que el modelo rápido.
-    groq_chat_model: str = "llama-3.3-70b-versatile"
+    # openai/gpt-oss-120b tiene excelente soporte de tool_use.
+    groq_chat_model: str = "openai/gpt-oss-120b"
 
     # ── Azure AI ──────────────────────────────────────────────────────────────
     azure_subscription_key: str = ""
@@ -84,9 +84,9 @@ class Settings(BaseSettings):
     # Changing this requires re-enrolling ALL employee faces.
     face_recognition_model: str = "Facenet512"
     # Canonical match threshold read by the recognition pipeline.
-    # Default 0.65 (65% similarity) for Facenet512 + cosine.
-    # Note: Cosine similarity threshold >= 0.65 corresponds to Cosine distance <= 0.35.
-    face_match_threshold: float = 0.65
+    # Default 0.70 (70% similarity) for Facenet512 + cosine.
+    # Note: Cosine similarity threshold >= 0.70 corresponds to Cosine distance <= 0.30.
+    face_match_threshold: float = 0.70
     # Legacy field — kept for backward-compat with older .env files.
     face_similarity_threshold: float = 0.40
 
@@ -103,7 +103,7 @@ class Settings(BaseSettings):
     #
     # image_max_brightness : Luminancia máxima (canal L de LAB, escala 0-255).
     #   > 220 → sobreexposición — imagen saturada de luz.
-    image_min_blur_score: float = 80.0
+    image_min_blur_score: float = 50.0
     image_min_brightness: float = 40.0
     image_max_brightness: float = 220.0
 

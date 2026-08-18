@@ -1,5 +1,5 @@
 # pyrefly: ignore [missing-import]
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 # pyrefly: ignore [missing-import]
 from sqlalchemy.orm import Session
 
@@ -17,17 +17,18 @@ _quality_validator = FaceQualityValidator()
 
 
 @router.post("/identificar", response_model=ReconocimientoResponse)
-def identificar(data: ReconocimientoRequest, db: Session = Depends(get_db)):
+def identificar(data: ReconocimientoRequest, request: Request, db: Session = Depends(get_db)):
     """
     Identifica un empleado a partir de una imagen facial en base64.
 
     Pipeline:
-      1. Validación de calidad (blur + iluminación) — Fail Fast HTTP 400.
+      1. Validación de calidad (ROI + blur + iluminación + histéresis) — Fail Fast HTTP 400.
       2. Reconocimiento facial via DeepFace/Facenet512.
     """
+    session_id = request.client.host if request.client else "default"
     # ── Guardia de calidad — se aborta antes de llamar a DeepFace ─────────────
     try:
-        _quality_validator.validate(data.imagen_base64)
+        _quality_validator.validate(data.imagen_base64, session_id=session_id)
     except FaceQualityError as qe:
         raise HTTPException(status_code=400, detail=qe.to_dict())
 
@@ -40,18 +41,19 @@ def identificar(data: ReconocimientoRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/marcar", response_model=ReconocimientoAsistenciaResponse)
-def marcar(data: ReconocimientoRequest, db: Session = Depends(get_db)):
+def marcar(data: ReconocimientoRequest, request: Request, db: Session = Depends(get_db)):
     """
     Identifica al empleado y registra automáticamente su marcación de
     entrada o salida.
 
     Pipeline:
-      1. Validación de calidad (blur + iluminación) — Fail Fast HTTP 400.
+      1. Validación de calidad (ROI + blur + iluminación + histéresis) — Fail Fast HTTP 400.
       2. Reconocimiento facial + marcación de asistencia.
     """
+    session_id = request.client.host if request.client else "default"
     # ── Guardia de calidad — se aborta antes de llamar a DeepFace ─────────────
     try:
-        _quality_validator.validate(data.imagen_base64)
+        _quality_validator.validate(data.imagen_base64, session_id=session_id)
     except FaceQualityError as qe:
         raise HTTPException(status_code=400, detail=qe.to_dict())
 
@@ -61,3 +63,4 @@ def marcar(data: ReconocimientoRequest, db: Session = Depends(get_db)):
         return resultado
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+

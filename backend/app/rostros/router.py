@@ -1,6 +1,6 @@
 import uuid
 # pyrefly: ignore [missing-import]
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 # pyrefly: ignore [missing-import]
 from pydantic import BaseModel
 # pyrefly: ignore [missing-import]
@@ -25,24 +25,25 @@ class RegistroResponse(BaseModel):
 router = APIRouter()
 
 # ── Instancia compartida del validador ────────────────────────────────────────
-# Singleton stateless. Umbrales leídos de Settings/env al iniciar la app.
+# Singleton. Umbrales leídos de Settings/env al iniciar la app.
 _quality_validator = FaceQualityValidator()
 
 
 @router.post("/", response_model=RegistroResponse, status_code=status.HTTP_201_CREATED)
-def registrar_rostro(data: RegistroRostroRequest, db: Session = Depends(get_db)):
+def registrar_rostro(data: RegistroRostroRequest, request: Request, db: Session = Depends(get_db)):
     """
     Registra una toma biométrica (enrolamiento) para un empleado.
 
     Pipeline:
-      1. Validación de calidad (blur + iluminación) — Fail Fast HTTP 400.
+      1. Validación de calidad (ROI + blur + iluminación) — Fail Fast HTTP 400.
          Se bloquea la toma si la imagen es borrosa o tiene mala iluminación,
          antes de calcular el embedding con Facenet512.
       2. Generación de embedding y persistencia en BD.
     """
+    session_id = request.client.host if request.client else "default"
     # ── Guardia de calidad — se aborta antes de llamar a DeepFace ─────────────
     try:
-        _quality_validator.validate(data.imagen_base64)
+        _quality_validator.validate(data.imagen_base64, session_id=session_id)
     except FaceQualityError as qe:
         raise HTTPException(status_code=400, detail=qe.to_dict())
 
@@ -62,3 +63,4 @@ def contar_rostros(db: Session = Depends(get_db)):
 @router.get("/empleado/{empleado_id}", response_model=list[RostroResponse])
 def listar_rostros(empleado_id: uuid.UUID, db: Session = Depends(get_db)):
     return service.listar_rostros_empleado(db, empleado_id)
+

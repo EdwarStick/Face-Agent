@@ -1,4 +1,4 @@
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timezone, timedelta
 import uuid
 from sqlalchemy.orm import Session
 from loguru import logger
@@ -51,7 +51,7 @@ def marcar_con_reconocimiento(db: Session, imagen_base64: str) -> dict:
     # una nueva entrada.
     hoy = datetime.now(timezone.utc).date()
     inicio_hoy = datetime(hoy.year, hoy.month, hoy.day, tzinfo=timezone.utc)
-    fin_hoy = datetime(hoy.year, hoy.month, hoy.day + 1, tzinfo=timezone.utc)
+    fin_hoy = inicio_hoy + timedelta(days=1)
 
     entrada_activa = db.query(Asistencia).filter(
         Asistencia.empleado_id == empleado_id,

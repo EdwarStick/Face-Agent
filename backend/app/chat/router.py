@@ -69,19 +69,34 @@ def _safe_parse_args(raw: str | None) -> dict[str, Any]:
         return {}
 
 
-_SYSTEM_PROMPT = (
-    "Eres HR-Agent, un asistente de inteligencia empresarial especializado en el sistema "
-    "de control de asistencia FaceAttendance AI. "
-    "Tu única fuente de información son las herramientas de base de datos que tienes disponibles. "
-    "NUNCA inventes datos, fechas, nombres o estadísticas; si no puedes consultarlos con las "
-    "herramientas disponibles, dilo claramente. "
-    "Cuando uses una herramienta, interpreta los resultados JSON y responde en lenguaje natural, "
-    "de forma clara, concisa y en español. "
-    "Si el usuario pregunta algo no relacionado con asistencia o empleados, indícale amablemente "
-    "que solo puedes responder sobre esos temas."
-)
+def _get_system_prompt() -> str:
+    from datetime import datetime
+    ahora_local = datetime.now()
+    dias_es = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+    meses_es = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+
+    dia_nombre = dias_es[ahora_local.weekday()]
+    mes_nombre = meses_es[ahora_local.month - 1]
+    fecha_formateada = f"{dia_nombre} {ahora_local.day} de {mes_nombre} de {ahora_local.year}, {ahora_local.strftime('%H:%M')} (hora local)"
+
+    return (
+        "Eres ARIA (HR-Agent), la asistente virtual inteligente de control de asistencia de FaceAttendance AI.\n"
+        f"CONTEXTO TEMPORAL ACTUAL: Hoy es {fecha_formateada}.\n"
+        "Tu objetivo es ayudar a gerentes y empleados a consultar asistencias, ausencias, tardanzas y estadísticas.\n\n"
+        "REGLAS DE INTERPRETACIÓN Y FORMATO:\n"
+        "1. Tienes total conciencia de la fecha y hora actual especificada arriba. Al presentar resúmenes, menciona explícitamente el día de la semana y la fecha de hoy.\n"
+        "2. Si el usuario saluda o pregunta qué haces (ej. 'hola', 'buenos días', 'quién eres'), responde de forma amable y breve en español explicando cómo puedes ayudar, SIN usar herramientas.\n"
+        "3. Para preguntas informales o sugeridas como '¿Quién faltó hoy?', 'quien falto', 'Resumen del día', 'ausentes', usa INMEDIATAMENTE la herramienta `get_attendance_summary_today`.\n"
+        "4. Para preguntas como '¿Quién está presente?', 'quien vino', 'quienes estan en la oficina', usa `get_employees_present_now` o `get_attendance_summary_today`.\n"
+        "5. Para preguntas como '¿Cuántos empleados hay?', 'total empleados', usa `get_attendance_stats` o `get_attendance_summary_today`.\n"
+        "6. Si preguntan por un empleado en específico (ej. 'asistencia de Juan', 'horas de Maria'), usa `get_employee_attendance` pasando el nombre.\n"
+        "7. Expresa las horas de entrada/salida siempre en formato de hora local limpia (ej. '16:57 hs' o '04:57 PM'). NUNCA muestres ni escribas la palabra 'UTC'.\n"
+        "8. NUNCA inventes información. Toda respuesta sobre datos de personas debe basarse en los resultados devueltos por tus herramientas.\n"
+        "9. Responde siempre de forma clara, concisa, profesional y en español."
+    )
 
 
+@router.post("", response_model=ChatResponse)
 @router.post("/", response_model=ChatResponse)
 def chat(data: ChatRequest, db: Session = Depends(get_db)):
     """
@@ -96,9 +111,11 @@ def chat(data: ChatRequest, db: Session = Depends(get_db)):
     """
     logger.info(f"[chat] Pregunta recibida: '{data.pregunta[:80]}...' " if len(data.pregunta) > 80 else f"[chat] Pregunta: '{data.pregunta}'")
 
+    system_prompt = _get_system_prompt()
+
     # ── Historial de mensajes — se construye progresivamente ─────────────────
     messages = [
-        {"role": "system", "content": _SYSTEM_PROMPT},
+        {"role": "system", "content": system_prompt},
         {"role": "user", "content": data.pregunta},
     ]
 
@@ -204,20 +221,28 @@ def chat(data: ChatRequest, db: Session = Depends(get_db)):
         )
 
     except APIStatusError as se:
-        # Error 400 tool_use_failed: el modelo no pudo interpretar la pregunta para las herramientas
-        if se.status_code == 400 and "tool_use_failed" in str(se.body):
-            logger.warning(f"[chat] Groq no pudo llamar herramienta: {se.message}")
-            raise HTTPException(
-                status_code=400,
-                detail={
-                    "error_code": "QUERY_NOT_UNDERSTOOD",
-                    "message": (
-                        "No pude entender tu pregunta para consultarla en la base de datos. "
-                        "Intenta ser más específico, por ejemplo: "
-                        "'¿Quién asistió hoy?' o '¿Cuántas horas trabajó [nombre] esta semana?'"
-                    ),
-                },
-            )
+        if se.status_code == 400:
+            logger.warning(f"[chat] Groq tool_use_failed fallback activado para: '{data.pregunta}'")
+            try:
+                resumen_json = execute_tool("get_attendance_summary_today", {}, db)
+                fallback_resp = _groq_client.chat.completions.create(
+                    model=settings.groq_chat_model,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": data.pregunta},
+                        {"role": "system", "content": f"Datos de asistencia de la base de datos: {resumen_json}"}
+                    ],
+                    temperature=0.3,
+                    max_tokens=1024,
+                )
+                txt = fallback_resp.choices[0].message.content or "Aquí está el resumen de asistencia del día de hoy."
+                return ChatResponse(
+                    pregunta=data.pregunta,
+                    respuesta=txt,
+                    fuente="fallback_summary"
+                )
+            except Exception as fe:
+                logger.error(f"[chat] Fallback error: {fe}")
         logger.error(f"[chat] Error de estado HTTP de Groq: {se.status_code} – {se.message}")
         raise HTTPException(
             status_code=502,

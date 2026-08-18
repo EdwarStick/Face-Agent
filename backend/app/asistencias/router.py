@@ -50,7 +50,7 @@ def obtener_stats(db: Session = Depends(get_db)):
 
 @router.get("/", response_model=list[AsistenciaListResponse])
 def listar_ultimas(
-    limite: int = Query(10, ge=1, le=100),
+    limite: int = Query(10, ge=1, le=500),
     db: Session = Depends(get_db),
 ):
     return service.listar_ultimas(db, limite)

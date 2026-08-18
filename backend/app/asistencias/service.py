@@ -1,5 +1,5 @@
 import uuid
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timezone, timedelta
 # pyrefly: ignore [missing-import]
 from sqlalchemy.orm import Session
 # pyrefly: ignore [missing-import]
@@ -12,11 +12,13 @@ from app.horarios import service as horarios_service
 
 def registrar_entrada(db: Session, data: RegistrarEntradaRequest) -> Asistencia:
     hoy = datetime.now(timezone.utc).date()
+    inicio_hoy = datetime(hoy.year, hoy.month, hoy.day, tzinfo=timezone.utc)
+    fin_hoy = inicio_hoy + timedelta(days=1)
 
     entrada_hoy = db.query(Asistencia).filter(
         Asistencia.empleado_id == data.empleado_id,
-        Asistencia.hora_entrada >= datetime(hoy.year, hoy.month, hoy.day, tzinfo=timezone.utc),
-        Asistencia.hora_entrada < datetime(hoy.year, hoy.month, hoy.day + 1, tzinfo=timezone.utc),
+        Asistencia.hora_entrada >= inicio_hoy,
+        Asistencia.hora_entrada < fin_hoy,
     ).first()
 
     if entrada_hoy:
@@ -55,11 +57,13 @@ def registrar_entrada(db: Session, data: RegistrarEntradaRequest) -> Asistencia:
 
 def registrar_salida(db: Session, data: RegistrarSalidaRequest) -> Asistencia:
     hoy = datetime.now(timezone.utc).date()
+    inicio_hoy = datetime(hoy.year, hoy.month, hoy.day, tzinfo=timezone.utc)
+    fin_hoy = inicio_hoy + timedelta(days=1)
 
     entrada_hoy = db.query(Asistencia).filter(
         Asistencia.empleado_id == data.empleado_id,
-        Asistencia.hora_entrada >= datetime(hoy.year, hoy.month, hoy.day, tzinfo=timezone.utc),
-        Asistencia.hora_entrada < datetime(hoy.year, hoy.month, hoy.day + 1, tzinfo=timezone.utc),
+        Asistencia.hora_entrada >= inicio_hoy,
+        Asistencia.hora_entrada < fin_hoy,
     ).first()
 
     if not entrada_hoy:
@@ -80,6 +84,13 @@ def registrar_salida(db: Session, data: RegistrarSalidaRequest) -> Asistencia:
     return entrada_hoy
 
 
+def _get_local_today_bounds():
+    now_local = datetime.now().astimezone()
+    inicio_local = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
+    fin_local = inicio_local + timedelta(days=1)
+    return inicio_local.astimezone(timezone.utc), fin_local.astimezone(timezone.utc)
+
+
 def listar_asistencias_empleado(db: Session, empleado_id: uuid.UUID) -> list[Asistencia]:
     return db.query(Asistencia).filter(
         Asistencia.empleado_id == empleado_id
@@ -87,9 +98,10 @@ def listar_asistencias_empleado(db: Session, empleado_id: uuid.UUID) -> list[Asi
 
 
 def listar_asistencias_hoy(db: Session) -> list[Asistencia]:
-    hoy = datetime.now(timezone.utc).date()
+    inicio_utc, fin_utc = _get_local_today_bounds()
     return db.query(Asistencia).filter(
-        Asistencia.hora_entrada >= datetime(hoy.year, hoy.month, hoy.day, tzinfo=timezone.utc)
+        Asistencia.hora_entrada >= inicio_utc,
+        Asistencia.hora_entrada < fin_utc,
     ).all()
 
 
@@ -116,11 +128,11 @@ def listar_ultimas(db: Session, limite: int = 10) -> list[dict]:
 
 def obtener_stats(db: Session) -> dict:
     total = db.query(sqlfunc.count(Asistencia.id)).scalar() or 0
+    inicio_utc, fin_utc = _get_local_today_bounds()
 
-    hoy_date = date.today()
     hoy = (
         db.query(sqlfunc.count(Asistencia.id))
-        .filter(sqlfunc.date(Asistencia.fecha_registro) == hoy_date)
+        .filter(Asistencia.hora_entrada >= inicio_utc, Asistencia.hora_entrada < fin_utc)
         .scalar()
         or 0
     )
@@ -129,7 +141,8 @@ def obtener_stats(db: Session) -> dict:
     presentes = (
         db.query(sqlfunc.count(Asistencia.id))
         .filter(
-            sqlfunc.date(Asistencia.fecha_registro) == hoy_date,
+            Asistencia.hora_entrada >= inicio_utc,
+            Asistencia.hora_entrada < fin_utc,
             Asistencia.hora_salida == None,
         )
         .scalar()
@@ -138,8 +151,9 @@ def obtener_stats(db: Session) -> dict:
     completados = (
         db.query(sqlfunc.count(Asistencia.id))
         .filter(
-            sqlfunc.date(Asistencia.fecha_registro) == hoy_date,
-                Asistencia.hora_salida != None,
+            Asistencia.hora_entrada >= inicio_utc,
+            Asistencia.hora_entrada < fin_utc,
+            Asistencia.hora_salida != None,
         )
         .scalar()
         or 0

@@ -14,8 +14,17 @@ import type {
 } from '../types/attendance.types';
 import { DEFAULT_PAGINATION } from '../types/attendance.types';
 
+export function toLocalDateStr(dateInput: Date | string): string {
+  const d = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+  if (isNaN(d.getTime())) return '';
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function todayStr(): string {
-  return new Date().toISOString().split('T')[0];
+  return toLocalDateStr(new Date());
 }
 
 interface AttendanceInfo {
@@ -42,16 +51,30 @@ function buildInfoFromList(
   items: AsistenciaListApiItem[],
 ): AttendanceInfo | null {
   if (items.length === 0) return null;
-  const hasExit = items.some((i) => i.tipo === 'salida');
   const entry = items.find((i) => i.tipo === 'entrada');
+  const exit = items.find((i) => i.tipo === 'salida');
+  const hasEntry = Boolean(entry);
+  const hasExit = Boolean(exit);
+
+  const horaEntrada = entry?.fecha_marcacion ?? (items[0]?.tipo === 'entrada' ? items[0].fecha_marcacion : null);
+  const horaSalida = exit?.fecha_marcacion ?? null;
+
+  let horasTrabajadas: number | null = null;
+  if (horaEntrada && horaSalida) {
+    const diffMs = new Date(horaSalida).getTime() - new Date(horaEntrada).getTime();
+    if (diffMs > 0) {
+      horasTrabajadas = Math.round((diffMs / 3600000) * 100) / 100;
+    }
+  }
+
   const latest = items[items.length - 1];
   return {
     id: latest.id,
-    hasEntry: true,
+    hasEntry,
     hasExit,
-    horaEntrada: entry?.fecha_marcacion ?? null,
-    horaSalida: null,
-    horasTrabajadas: null,
+    horaEntrada,
+    horaSalida,
+    horasTrabajadas,
   };
 }
 
@@ -122,9 +145,9 @@ export function useAttendance(filters: AttendanceFiltersState) {
           infoMap.set(item.empleado_id, buildInfoFromFull(item));
         }
       } else {
-        const recent = await attendanceService.getRecentAttendance(100);
+        const recent = await attendanceService.getRecentAttendance(200);
         const filtered = recent.filter((r) => {
-          const d = r.fecha_marcacion.split('T')[0];
+          const d = toLocalDateStr(r.fecha_marcacion);
           if (fecha) return d === fecha;
           if (desde && d < desde) return false;
           if (hasta && d > hasta) return false;

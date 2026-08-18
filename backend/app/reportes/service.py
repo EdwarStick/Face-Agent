@@ -1,6 +1,5 @@
-# pyrefly: ignore [missing-import]
 import uuid
-from datetime import datetime, timezone, date
+from datetime import datetime, timezone, date, timedelta
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -8,14 +7,22 @@ from app.models.empleado import Empleado
 from app.models.asistencia import Asistencia
 
 
+def _get_local_today_bounds():
+    now_local = datetime.now().astimezone()
+    inicio_local = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
+    fin_local = inicio_local + timedelta(days=1)
+    return inicio_local.astimezone(timezone.utc), fin_local.astimezone(timezone.utc)
+
+
 def resumen_diario(db: Session) -> dict:
-    hoy = datetime.now(timezone.utc).date()
-    inicio_hoy = datetime(hoy.year, hoy.month, hoy.day, tzinfo=timezone.utc)
+    inicio_utc, fin_utc = _get_local_today_bounds()
+    hoy_local = datetime.now().astimezone().date()
 
     total_empleados = db.query(Empleado).filter(Empleado.activo == True).count()
 
     asistencias_hoy = db.query(Asistencia).filter(
-        Asistencia.hora_entrada >= inicio_hoy
+        Asistencia.hora_entrada >= inicio_utc,
+        Asistencia.hora_entrada < fin_utc,
     ).all()
 
     presentes = sum(1 for a in asistencias_hoy if a.hora_salida is None)
@@ -24,7 +31,7 @@ def resumen_diario(db: Session) -> dict:
     porcentaje = round((len(asistencias_hoy) / total_empleados * 100), 2) if total_empleados > 0 else 0
 
     return {
-        "fecha": hoy,
+        "fecha": hoy_local,
         "total_empleados": total_empleados,
         "presentes": presentes,
         "ya_salieron": ya_salieron,
@@ -34,11 +41,12 @@ def resumen_diario(db: Session) -> dict:
 
 
 def reporte_asistencias_hoy(db: Session) -> dict:
-    hoy = datetime.now(timezone.utc).date()
-    inicio_hoy = datetime(hoy.year, hoy.month, hoy.day, tzinfo=timezone.utc)
+    inicio_utc, fin_utc = _get_local_today_bounds()
+    hoy_local = datetime.now().astimezone().date()
 
     asistencias = db.query(Asistencia).filter(
-        Asistencia.hora_entrada >= inicio_hoy
+        Asistencia.hora_entrada >= inicio_utc,
+        Asistencia.hora_entrada < fin_utc,
     ).all()
 
     detalle = []
@@ -56,7 +64,7 @@ def reporte_asistencias_hoy(db: Session) -> dict:
             "porcentaje_confianza": a.porcentaje_confianza
         })
 
-    return {"fecha": hoy, "asistencias": detalle}
+    return {"fecha": hoy_local, "asistencias": detalle}
 
 
 def estadisticas_empleado(db: Session, empleado_id: uuid.UUID) -> dict | None:

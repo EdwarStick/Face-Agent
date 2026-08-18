@@ -44,10 +44,10 @@ from app.models.empleado import Empleado
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _fmt_dt(dt: datetime | None) -> str | None:
-    """Formatea un datetime UTC a string legible. Retorna None si es None."""
+    """Formatea un datetime a string legible en la hora local del sistema."""
     if dt is None:
         return None
-    return dt.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    return dt.astimezone().strftime("%Y-%m-%d %H:%M (hora local)")
 
 
 def _nombre_completo(e: Empleado) -> str:
