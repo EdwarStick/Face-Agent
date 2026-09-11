@@ -397,15 +397,15 @@ class FaceQualityValidator:
             )
 
         # 4. Deteccion de gorra, sombrero o visera
-        if self._check_headwear_or_cap(face_roi):
-            logger.warning("Imagen rechazada: Presencia de gorra, sombrero o visera sobre la frente")
-            raise FaceQualityError(
-                code="HEADWEAR_DETECTED",
-                message=(
-                    "Parece que llevas gorra, sombrero o visera. "
-                    "Por favor, retírate la gorra para poder verificar tu rostro e intentar de nuevo."
-                ),
-            )
+        # if self._check_headwear_or_cap(face_roi):
+        #     logger.warning("Imagen rechazada: Presencia de gorra, sombrero o visera sobre la frente")
+        #     raise FaceQualityError(
+        #         code="HEADWEAR_DETECTED",
+        #         message=(
+        #             "Parece que llevas gorra, sombrero o visera. "
+        #             "Por favor, retírate la gorra para poder verificar tu rostro e intentar de nuevo."
+        #         ),
+        #     )
 
         # 3. Iluminacion en el rostro
         mean_brightness = self._compute_brightness(face_roi)
